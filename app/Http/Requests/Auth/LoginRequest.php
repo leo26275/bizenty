@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+
 class LoginRequest extends FormRequest
 {
     /**
@@ -50,6 +51,9 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        $user = Auth::user();
+        session(['company_id' => $user->company?->id]);
     }
 
     /**

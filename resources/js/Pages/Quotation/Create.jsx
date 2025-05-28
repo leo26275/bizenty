@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, usePage, router } from "@inertiajs/react";
 import React, { useState, useRef } from "react";
 import { InputText } from "primereact/inputtext";
 import { useFormik } from "formik";
@@ -11,12 +11,25 @@ import { InputNumber } from "primereact/inputnumber";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
+import { v4 as uuidv4 } from "uuid";
+import { Divider } from "primereact/divider";
+import "@/Pages/Quotation/styles/style.page.scss";
+import { Badge } from "primereact/badge";
 
 export default function Create() {
+    const prefix_new = "NEW_";
+    const prefix_del = "DEL_";
+
     const [products, setProducts] = useState([]);
     const [value, setValue] = useState("");
     const [editingRows, setEditingRows] = useState({});
     const descriptionRefs = useRef({});
+    const { categories, companyConfig } = usePage().props;
+
+    const categoryOptions = categories.map((cat) => ({
+        name: cat.name,
+        id: cat.id,
+    }));
 
     const columns = [
         { field: "type.name", header: "Categoria" },
@@ -26,73 +39,7 @@ export default function Create() {
         { field: "total_amount", header: "Total" },
     ];
 
-    const [itemsTable, setItemsTable] = useState([
-        {
-            id: 100,
-            type: {
-                id: 10,
-                name: "PINTURA",
-            },
-            description: "Encielado y puesta de balcones",
-            unit_price: 100,
-            quantity: 7,
-            total_amount: 700,
-        },
-        {
-            id: 101,
-            type: {
-                id: 10,
-                name: "ARMADURIA",
-            },
-            description: "Ajuste de puertas e instalacion",
-            unit_price: 100,
-            quantity: 7,
-            total_amount: 700,
-        },
-    ]);
-
-    const typeOptions = [
-        { id: 1, name: "PINTURA" },
-        { id: 2, name: "ARMADURIA" },
-        { id: 3, name: "ELECTRICIDAD" },
-    ];
-
-    const isPositiveInteger = (val) => {
-        let str = String(val);
-
-        str = str.trim();
-
-        if (!str) {
-            return false;
-        }
-
-        str = str.replace(/^0+/, "") || "0";
-        let n = Math.floor(Number(str));
-
-        return n !== Infinity && String(n) === str && n >= 0;
-    };
-
-    const cellEditor = (options) => {
-        if (options.field === "unit_price" || options.field === "total_amount")
-            return priceEditor(options);
-        else return textEditor(options);
-    };
-
-
-
-    const priceBodyTemplate = (rowData) => {
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-        }).format(rowData.unit_price);
-    };
-
-    const priceBodyTemplateTotal = (rowData) => {
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-        }).format(rowData.total_amount);
-    };
+    const [itemsTable, setItemsTable] = useState([]);
 
     const onCellEditComplete = (e) => {
         let { rowData, newValue, field, originalEvent: event } = e;
@@ -113,16 +60,15 @@ export default function Create() {
         }
     };
 
-
-
     const formik = useFormik({
         initialValues: {
             customer_name: "",
             customer_address: "",
-            company_name: "",
-            company_address: "",
-            quotation_id: "",
-            quotation_date: "",
+            company_name: companyConfig.company_name,
+            company_address: companyConfig.address,
+            quotation_id: "0",
+            quotation_date: "ee",
+            total: 700,
         },
         validate: (data) => {
             let errors = {};
@@ -134,6 +80,16 @@ export default function Create() {
             return errors;
         },
         onSubmit: (data) => {
+            const payload = {
+                header: data,
+                details: itemsTable,
+                deletes: [],
+            };
+
+            console.log("payload");
+            console.log(payload);
+
+            router.post("/quotation", payload);
             formik.resetForm();
         },
     });
@@ -148,9 +104,8 @@ export default function Create() {
         );
     };
 
-
     const addItem = () => {
-        const newId = Date.now();
+        const newId = prefix_new + uuidv4();
 
         const newItem = {
             id: newId,
@@ -175,13 +130,12 @@ export default function Create() {
         // Enfocar después de un breve retraso (esperar que el DOM se actualice)
         //No esta funcionando
         setTimeout(() => {
-            console.log('Procesnado en timeout');
+            console.log("Procesnado en timeout");
             if (descriptionRefs.current[newId]) {
-                console.log('Enviando el foco a ' + newId);
+                console.log("Enviando el foco a " + newId);
                 descriptionRefs.current[newId].focus();
             }
         }, 5000);
-
     };
 
     const textEditor = (options) => {
@@ -220,7 +174,9 @@ export default function Create() {
     const onEditorValueChange = (props, value, fieldOverride = null) => {
         const field = fieldOverride || props.field;
         const updatedItems = [...itemsTable];
-        const index = updatedItems.findIndex((item) => item.id === props.rowData.id);
+        const index = updatedItems.findIndex(
+            (item) => item.id === props.rowData.id
+        );
         if (index !== -1) {
             updatedItems[index] = {
                 ...updatedItems[index],
@@ -229,7 +185,8 @@ export default function Create() {
 
             if (field === "unit_price" || field === "quantity") {
                 const { unit_price, quantity } = updatedItems[index];
-                updatedItems[index].total_amount = (unit_price || 0) * (quantity || 0);
+                updatedItems[index].total_amount =
+                    (unit_price || 0) * (quantity || 0);
             }
 
             if (field === "type") {
@@ -240,23 +197,55 @@ export default function Create() {
         }
     };
 
-
     const dropdownEditor = (props) => (
         <Dropdown
             value={props.rowData.type}
-            options={typeOptions}
+            options={categoryOptions}
             optionLabel="name"
             onChange={(e) => onEditorValueChange(props, e.value, "type")}
             placeholder="Seleccione tipo"
         />
     );
 
-
     const deleteItem = (id) => {
-        const updatedItems = itemsTable.filter(item => item.id !== id);
+        const updatedItems = itemsTable.filter((item) => item.id !== id);
         setItemsTable(updatedItems);
     };
 
+    const isPositiveInteger = (val) => {
+        let str = String(val);
+
+        str = str.trim();
+
+        if (!str) {
+            return false;
+        }
+
+        str = str.replace(/^0+/, "") || "0";
+        let n = Math.floor(Number(str));
+
+        return n !== Infinity && String(n) === str && n >= 0;
+    };
+
+    const cellEditor = (options) => {
+        if (options.field === "unit_price" || options.field === "total_amount")
+            return priceEditor(options);
+        else return textEditor(options);
+    };
+
+    const priceBodyTemplate = (rowData) => {
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+        }).format(rowData.unit_price);
+    };
+
+    const priceBodyTemplateTotal = (rowData) => {
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+        }).format(rowData.total_amount);
+    };
 
     const actionBodyTemplate = (rowData) => {
         return (
@@ -272,13 +261,20 @@ export default function Create() {
         );
     };
 
-
-    const onSaveData = () => {
-        const dataPayload = {
-
-        }
-
-    }
+    const headerCardTemplate = (quotation_id) => {
+        return (
+            <div className="flex justify-content-between align-items-center">
+                <h3>
+                    Cotizacion Num.{" "}
+                    {quotation_id == null || quotation_id == 0 ? (
+                        <Badge value="NEW" severity="success"></Badge>
+                    ) : (
+                        quotation_id
+                    )}{" "}
+                </h3>
+            </div>
+        );
+    };
 
     return (
         <AuthenticatedLayout
@@ -289,221 +285,267 @@ export default function Create() {
             }
         >
             <Head title="Cotizaciones" />
-            <Card title="Crear Cotizacion">
-                <div>
+            <Card title={headerCardTemplate(0)}>
+                <form onSubmit={formik.handleSubmit} className="">
+                    <div className="flex flex-wrap justify-content-end gap-3">
+                        <Button
+                            label="Guardar"
+                            severity="success"
+                            type="submit"
+                        />
+                    </div>
+
                     <div className="">
-                        <div className="">
-                            <form
-                                onSubmit={formik.handleSubmit}
-                                className="formgrid grid"
-                            >
-                                <div className="field col">
-                                    <label
-                                        htmlFor="integeronly"
-                                        className="font-bold block mb-2"
-                                    >
-                                        Cliente
-                                    </label>
-                                    <div className="field">
-                                        <InputText
-                                            value={formik.customer_name}
-                                            onChange={formik.handleChange}
-                                            className={classNames({
+                        <div className="formgrid grid">
+                            <div className="field col-5">
+                                <label
+                                    htmlFor="integeronly"
+                                    className="font-bold block mb-2"
+                                >
+                                    Empresa
+                                </label>
+                                <div className="field">
+                                    <InputText
+                                        value={formik.values.company_name}
+                                        onChange={formik.handleChange}
+                                        className={classNames(
+                                            "p-inputtext-sm",
+                                            "w-full",
+                                            {
+                                                "p-invalid":
+                                                    isFormFieldValid(
+                                                        "company_name"
+                                                    ),
+                                            }
+                                        )}
+                                    />
+                                    {getFormErrorMessage("company_name")}
+                                </div>
+                                <div className="field">
+                                    <InputTextarea
+                                        id="company_address"
+                                        name="company_address"
+                                        value={formik.values.company_address}
+                                        onChange={formik.handleChange}
+                                        rows={5}
+                                        cols={23}
+                                        className={classNames(
+                                            "p-inputtext-sm",
+                                            "w-full",
+                                            {
+                                                "p-invalid":
+                                                    isFormFieldValid(
+                                                        "company_address"
+                                                    ),
+                                            }
+                                        )}
+                                    />
+                                    {getFormErrorMessage("company_address")}
+                                </div>
+
+                                <Divider />
+
+                                <label
+                                    htmlFor="customer_name"
+                                    className="font-bold block mb-2"
+                                >
+                                    Cliente
+                                </label>
+                                <div className="field p-inputgroup flex-1">
+                                    <InputText
+                                        id="customer_name"
+                                        name="customer_name"
+                                        value={formik.values.customer_name}
+                                        onChange={formik.handleChange}
+                                        className={classNames(
+                                            "p-inputtext-sm",
+                                            {
                                                 "p-invalid":
                                                     isFormFieldValid(
                                                         "customer_name"
                                                     ),
-                                            })}
-                                        />
-                                        {getFormErrorMessage("customer_name")}
-                                    </div>
-                                    <div className="field">
-                                        <InputText
-                                            value={formik.customer_address}
-                                            onChange={formik.handleChange}
-                                            className={classNames({
+                                            }
+                                        )}
+                                    />
+                                    <Button
+                                        icon="pi pi-search"
+                                        className="p-button-warning"
+                                    />
+                                </div>
+                                {getFormErrorMessage("customer_name")}
+
+                                <div className="field">
+                                    <InputTextarea
+                                        id="customer_address"
+                                        name="customer_address"
+                                        value={formik.values.customer_address}
+                                        onChange={formik.handleChange}
+                                        rows={5}
+                                        cols={50}
+                                        className={classNames(
+                                            "p-inputtext-sm",
+                                            "w-full",
+                                            {
                                                 "p-invalid":
                                                     isFormFieldValid(
                                                         "customer_address"
                                                     ),
-                                            })}
-                                        />
-                                        {getFormErrorMessage(
-                                            "customer_address"
+                                            }
                                         )}
-                                    </div>
+                                    />
+                                    {getFormErrorMessage("customer_address")}
+                                </div>
+                            </div>
 
+                            <div className="field col-7">
+                                <div className="pl-6">
                                     <label
-                                        htmlFor="integeronly"
+                                        htmlFor="customer_name"
                                         className="font-bold block mb-2"
                                     >
-                                        Empresa
+                                        Logotipo
                                     </label>
-                                    <div className="field">
-                                        <InputText
-                                            value={formik.customer_name}
-                                            onChange={formik.handleChange}
-                                            className={classNames({
-                                                "p-invalid":
-                                                    isFormFieldValid(
-                                                        "customer_name"
-                                                    ),
-                                            })}
-                                        />
-                                        {getFormErrorMessage("customer_name")}
+                                    <div className="border-2 border-dashed surface-border border-round surface-ground flex flex-column justify-content-center align-items-center font-medium">
+                                        <div className="p-2">
+                                            <img
+                                                class="logo"
+                                                src="https://img.freepik.com/vector-premium/diseno-logotipo-triangulo-minimo-colores-degradados_720439-7.jpg"
+                                                alt=""
+                                            />
+                                        </div>
+                                        <div className="p-2 text-center">
+                                            Para cambiar el logo actual, navegue
+                                            hasta el apartado de configuración
+                                            para su empresa.
+                                        </div>
                                     </div>
-                                    <div className="field">
-                                        <InputText
-                                            value={formik.customer_address}
-                                            onChange={formik.handleChange}
-                                            className={classNames({
-                                                "p-invalid":
-                                                    isFormFieldValid(
-                                                        "customer_address"
-                                                    ),
-                                            })}
-                                        />
-                                        {getFormErrorMessage(
-                                            "customer_address"
-                                        )}
+                                    <div className="flex  flex-column justify-content-end align-items-end align-content-end pt-4">
+                                        <div className="field">
+                                            <label
+                                                htmlFor="quotation_date"
+                                                className="col-fixed"
+                                            >
+                                                Fecha Cotizacion
+                                            </label>
+                                            <InputText
+                                                id="quotation_date"
+                                                name="quotation_date"
+                                                value={
+                                                    formik.values.quotation_date
+                                                }
+                                                disabled
+                                                onChange={formik.handleChange}
+                                                className={classNames(
+                                                    "p-inputtext-sm",
+                                                    {
+                                                        "p-invalid":
+                                                            isFormFieldValid(
+                                                                "quotation_date"
+                                                            ),
+                                                    }
+                                                )}
+                                            />
+                                            {getFormErrorMessage(
+                                                "quotation_date"
+                                            )}
+                                        </div>
+
+                                        <div className="field">
+                                            <label
+                                                htmlFor="quotation_date"
+                                                className="col-fixed"
+                                            >
+                                                Termino vencimiento
+                                            </label>
+                                            <InputText
+                                                id="quotation_date"
+                                                value={formik.quotation_date}
+                                                onChange={formik.handleChange}
+                                                className={classNames(
+                                                    "p-inputtext-sm",
+                                                    {
+                                                        "p-invalid":
+                                                            isFormFieldValid(
+                                                                "quotation_date"
+                                                            ),
+                                                    }
+                                                )}
+                                            />
+                                            {getFormErrorMessage(
+                                                "quotation_date"
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="field col">
-                                    <div className="field grid">
-                                        <label
-                                            htmlFor="quotation_id"
-                                            className="col-fixed"
-                                            style={{ width: "100px" }}
-                                        >
-                                            No. Cotizacion
-                                        </label>
-                                        <InputText
-                                            id="quotation_id"
-                                            value={formik.quotation_id}
-                                            onChange={formik.handleChange}
-                                            className={classNames({
-                                                "p-invalid":
-                                                    isFormFieldValid(
-                                                        "quotation_id"
-                                                    ),
-                                            })}
-                                        />
-                                        {getFormErrorMessage("quotation_id")}
-                                    </div>
-
-                                    <div className="field grid">
-                                        <label
-                                            style={{ width: "100px" }}
-                                            htmlFor="quotation_date"
-                                            className="col-fixed"
-                                        >
-                                            Fecha Cotizacion
-                                        </label>
-                                        <InputText
-                                            id="quotation_date"
-                                            value={formik.quotation_date}
-                                            onChange={formik.handleChange}
-                                            className={classNames({
-                                                "p-invalid":
-                                                    isFormFieldValid(
-                                                        "quotation_date"
-                                                    ),
-                                            })}
-                                        />
-                                        {getFormErrorMessage("quotation_date")}
-                                    </div>
-
-                                    <div className="field grid">
-                                        <label
-                                            style={{ width: "100px" }}
-                                            htmlFor="quotation_date"
-                                            className="col-fixed"
-                                        >
-                                            Termino vencimiento
-                                        </label>
-                                        <InputText
-                                            id="quotation_date"
-                                            value={formik.quotation_date}
-                                            onChange={formik.handleChange}
-                                            className={classNames({
-                                                "p-invalid":
-                                                    isFormFieldValid(
-                                                        "quotation_date"
-                                                    ),
-                                            })}
-                                        />
-                                        {getFormErrorMessage("quotation_date")}
-                                    </div>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/*Table Items Content*/}
-                <div>
-                    <div className="p-fluid">
-                        <DataTable
-                            value={itemsTable}
-                            editMode="cell"
-                            showGridlines
-                            dataKey="id"
-                            editingRows={editingRows}
-                            size="small"
-                            tableStyle={{ minWidth: "50rem" }}
-                        >
-                            <Column
-                                field="type.name"
-                                header="Categoria"
-                                footer="Categoria"
+                    <Divider />
+                    <h3>Lista de servicios cotizados</h3>
+                    {/*Table Items Content*/}
+                    <div>
+                        <div className="p-fluid">
+                            <DataTable
+                                value={itemsTable}
+                                editMode="cell"
+                                showGridlines
+                                dataKey="id"
+                                editingRows={editingRows}
+                                size="small"
+                                tableStyle={{ minWidth: "50rem" }}
+                            >
+                                <Column
+                                    field="type.name"
+                                    header="Categoria"
+                                    footer="Categoria"
+                                    style={{ minWidth: "100px" }}
+                                    editor={dropdownEditor}
+                                    onCellEditComplete={onCellEditComplete}
+                                ></Column>
+                                <Column
+                                    field="description"
+                                    header="Descripción"
+                                    footer="Descripción"
+                                    editor={(options) => cellEditor(options)}
+                                    style={{ minWidth: "100px" }}
+                                    onCellEditComplete={onCellEditComplete}
+                                ></Column>
 
-                                style={{ minWidth: "100px" }}
-                                editor={dropdownEditor}
-                                onCellEditComplete={onCellEditComplete}
-                            ></Column>
-                            <Column
-                                field="description"
-                                header="Descripción"
-                                footer="Descripción"
-                                editor={(options) => cellEditor(options)}
-                                style={{ minWidth: "100px" }}
-                                onCellEditComplete={onCellEditComplete}
-                            ></Column>
+                                <Column
+                                    field="unit_price"
+                                    header="Precio unidad"
+                                    footer="Precio unidad"
+                                    body={priceBodyTemplate}
+                                    editor={(options) => cellEditor(options)}
+                                    style={{ minWidth: "100px" }}
+                                    onCellEditComplete={onCellEditComplete}
+                                ></Column>
+                                <Column
+                                    field="quantity"
+                                    header="Cantidad"
+                                    footer="Cantidad"
+                                    editor={(options) => cellEditor(options)}
+                                    style={{ minWidth: "100px" }}
+                                    onCellEditComplete={onCellEditComplete}
+                                ></Column>
+                                <Column
+                                    field="total_amount"
+                                    header="Total"
+                                    footer="Total"
+                                    body={priceBodyTemplateTotal}
+                                    editor={(options) => cellEditor(options)}
+                                    style={{ minWidth: "100px" }}
+                                    onCellEditComplete={onCellEditComplete}
+                                ></Column>
+                                <Column
+                                    header="Acciones"
+                                    footer="Acciones"
+                                    body={actionBodyTemplate}
+                                    style={{ maxWidth: "70px" }}
+                                ></Column>
 
-                            <Column
-                                field="unit_price"
-                                header="Precio unidad"
-                                footer="Precio unidad"
-                                body={priceBodyTemplate}
-                                editor={(options) => cellEditor(options)}
-                                style={{ minWidth: "100px" }}
-                                onCellEditComplete={onCellEditComplete}
-                            ></Column>
-                            <Column
-                                field="quantity"
-                                header="Cantidad"
-                                footer="Cantidad"
-                                editor={(options) => cellEditor(options)}
-                                style={{ minWidth: "100px" }}
-                                onCellEditComplete={onCellEditComplete}
-                            ></Column>
-                            <Column
-                                field="total_amount"
-                                header="Total"
-                                footer="Total"
-                                body={priceBodyTemplateTotal}
-                                editor={(options) => cellEditor(options)}
-                                style={{ minWidth: "100px" }}
-                                onCellEditComplete={onCellEditComplete}
-                            ></Column>
-                            <Column
-                                header="Acciones"
-                                footer="Acciones"
-                                body={actionBodyTemplate}
-                                style={{ maxWidth: "70px" }}
-                            ></Column>
-
-                            {/*columns.map(({ field, header }) => {
+                                {/*columns.map(({ field, header }) => {
                             return (
                                 <Column
                                     key={field}
@@ -519,63 +561,61 @@ export default function Create() {
                                 />
                             );
                         })*/}
-                        </DataTable>
-                    </div>
+                            </DataTable>
+                        </div>
 
-                    <div className="pt-2local">
-                        <Button
-                            size="small"
-                            label="Agregar Nueva Linea"
-                            icon="pi pi-plus"
-                            className="bg-gray-500 hover:bg-gray-400 border-gray-600"
-                            onClick={addItem}
-                        />
+                        <div className="pt-2 local">
+                            <Button
+                                size="small"
+                                type="button"
+                                label="Agregar Nueva Linea"
+                                icon="pi pi-plus"
+                                className="bg-gray-500 hover:bg-gray-400 border-gray-600"
+                                onClick={addItem}
+                            />
+                        </div>
                     </div>
-                </div>
-                {/*Table Summary Content*/}
-                <div className="pt-5 grid">
-                    <div className="col flex">
-                        <label
-                            style={{ width: "100px" }}
-                            htmlFor="txt_notes"
-                            className="col-fixed"
-                        >
-                            Notas
-                        </label>
-                        <InputTextarea
-                            id="txt_notes"
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            rows={5}
-                            cols={30}
-                        />
+                    {/*Table Summary Content*/}
+                    <div className="pt-6 grid">
+                        <div className="col flex">
+                            <label
+                                style={{ width: "100px" }}
+                                htmlFor="txt_notes"
+                                className="col-fixed"
+                            >
+                                Notas
+                            </label>
+                            <InputTextarea
+                                id="txt_notes"
+                                className="w-full"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                rows={5}
+                                cols={30}
+                            />
+                        </div>
+                        <div className="col flex justify-content-end">
+                            <table className="table01">
+                                <tr>
+                                    <td>Sub Total</td>
+                                    <td>$ 3254.24</td>
+                                </tr>
+                                <tr>
+                                    <td>Total</td>
+                                    <td>$ 3254.24</td>
+                                </tr>
+                                <tr>
+                                    <td>Monto Pagado</td>
+                                    <td>$ 3254.24</td>
+                                </tr>
+                                <tr>
+                                    <td>Total restante</td>
+                                    <td>$ 3254.24</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
-                    <div className="col">
-                        <table>
-                            <tr>
-                                <td>Sub Total</td>
-                                <td>$ 3254.24</td>
-                            </tr>
-                            <tr>
-                                <td>Total</td>
-                                <td>$ 3254.24</td>
-                            </tr>
-                            <tr>
-                                <td>Monto Pagado</td>
-                                <td>$ 3254.24</td>
-                            </tr>
-                            <tr>
-                                <td>Total restante</td>
-                                <td>$ 3254.24</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-
-                <div>
-                    <Button label="Guardar" severity="success" onClick={onSaveData}/>
-                    <Button label="Cancelar" severity="danger" />
-                </div>
+                </form>
             </Card>
         </AuthenticatedLayout>
     );

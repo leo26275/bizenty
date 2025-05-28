@@ -1,0 +1,13 @@
+.panel-auth {
+    width: 100%;
+    max-width: 800px;
+    background: white;
+
+    .panel-l{
+        background-image: url('/images/bgback01.jpg'); // ruta desde la carpeta public
+          background-repeat: no-repeat;
+        background-size: cover;
+         background-position: center; /* Center the image */
+    }
+}
+

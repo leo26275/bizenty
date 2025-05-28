@@ -1,8 +1,9 @@
 <?php
-
+use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,14 +31,15 @@ Route::get('/categories/create', function () {
 
 Route::middleware(['auth', 'verified'])->group(function(){
 
-    Route::get('/quotation', function () {
-        return Inertia::render('Quotation/Index');
-    })->name('quot.index');
+    Route::get('/quotation', [QuotationController::class, 'index'])->name('quotation.index');
 
-    Route::get('/quotation/create', function () {
+    /*Route::get('/quotation/create', function () {
         return Inertia::render('Quotation/Create');
-    })->name('quot.create');
+    })->name('quotation.create');*/
 
+    Route::get('/quotation/create', [QuotationController::class, 'create'])->name('quotation.create');
+    Route::post('/quotation', [QuotationController::class, 'storeOrUpdate'])->name('quotation.mergue');
+    Route::get('/reports/quotation/download', [ReportController::class, 'download'])->name('reports.quotation.download');
 
 
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');

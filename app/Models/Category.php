@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Category extends Model
 {
@@ -16,15 +17,13 @@ class Category extends Model
         parent::boot();
 
         static::creating(function ($category) {
-            //$category->company_id = Session::get('company_loged');
-            $category->company_id = 1;
+            $category->company_id = Auth::user()->company_id;
         });
 
         // Si deseas proteger también en caso de actualización (opcional)
         static::updating(function ($category) {
             // Solo lo reasignas si quieres evitar cambios posteriores
-            // $category->company_id = Session::get('company_loged');
-            $category->company_id = 1;
+            $category->company_id = Auth::user()->company_id;
         });
     }
 }

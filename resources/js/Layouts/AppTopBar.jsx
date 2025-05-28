@@ -4,24 +4,40 @@ import React, {
     useImperativeHandle,
     useRef,
 } from "react";
-import { router } from "@inertiajs/react";
-
+import { router, usePage } from "@inertiajs/react";
 import { LayoutContext } from "@/Layouts/Context/layoutcontext";
 import { MegaMenu } from "primereact/megamenu";
 import { classNames } from "primereact/utils";
 import { Ripple } from "primereact/ripple";
+import { Chip } from "primereact/chip";
+import { Button } from "primereact/button";
 
 const AppTopbar = forwardRef((props, ref) => {
     const menubuttonRef = useRef(null);
     const topbarmenuRef = useRef(null);
     const topbarmenubuttonRef = useRef(null);
     const { layoutConfig, layoutState } = useContext(LayoutContext);
+    const user = usePage().props.auth.user;
+
+    //console.log('Datos desde el hook');
+    //console.log(usePage().props.auth);
 
     useImperativeHandle(ref, () => ({
         menubutton: menubuttonRef.current,
         topbarmenu: topbarmenuRef.current,
         topbarmenubutton: topbarmenubuttonRef.current,
     }));
+
+    const optionsSplit = [
+        {
+            label: "Update",
+            icon: "pi pi-refresh",
+        },
+        {
+            label: "Delete",
+            icon: "pi pi-times",
+        },
+    ];
 
     const itemRenderer = (item, options) => {
         if (item.root) {
@@ -87,13 +103,13 @@ const AppTopbar = forwardRef((props, ref) => {
                             {
                                 label: "Crear",
                                 command: () => {
-                                    router.get(route("quot.create"));
+                                    router.get(route("quotation.create"));
                                 },
                             },
                             {
                                 label: "Filtrar registros",
                                 command: () => {
-                                    router.get(route("quot.index"));
+                                    router.get(route("quotation.index"));
                                 },
                             },
                         ],
@@ -182,7 +198,7 @@ const AppTopbar = forwardRef((props, ref) => {
                             {
                                 label: "Filtrar registros",
                                 command: () => {
-                                    router.get(route("categories.create"));
+                                    router.get(route("categories.index"));
                                 },
                             },
                         ],
@@ -222,21 +238,31 @@ const AppTopbar = forwardRef((props, ref) => {
                                 layoutState.profileSidebarVisible,
                         })}
                     >
-                        <button
-                            type="button"
-                            className="p-link layout-topbar-button"
-                        >
-                            <i className="pi pi-user"></i>
-                            <span>Profile</span>
-                        </button>
+                        <div className="flex align-items-center justify-content-center">
+                            <Chip
+                                label={user.name}
+                                image="/images/avatar/default.jpg"
+                            />
+                        </div>
 
-                        <button
-                            type="button"
-                            className="p-link layout-topbar-button"
-                        >
-                            <i className="pi pi-cog"></i>
-                            <span>Settings</span>
-                        </button>
+                        <Button
+                            icon="pi pi-cog"
+                            rounded
+                            text
+                            severity="secondary"
+                            aria-label="Settings"
+                        />
+
+                        <Button
+                            icon="pi pi-sign-out"
+                            rounded
+                            text
+                            onClick={(e) => {
+                                router.post(route('logout'));
+                            }}
+                            severity="secondary"
+                            aria-label="Logout"
+                        />
                     </div>
                 </div>
                 <div className="ct-pnl02 p-2">

@@ -13,9 +13,14 @@ return new class extends Migration
     {
         Schema::create('quotations', function (Blueprint $table) {
             $table->id();
+            //$table->foreignId('customer_id')->constrained('customers');
+            //agregar aqui
+            $table->string('customer_name', 200);
+            $table->string('customer_address', 200);
             $table->decimal('total', 10, 2);
-            $table->foreignId('customer_id')->constrained('customers');
-            $table->foreignId('company_id')->contrained('companies');
+            $table->date('mov_date')->comment('Date when the quotation was create (YYYY-MM-DD)');
+            $table->enum('status', ['draft', 'invoiced'])->default('draft')->comment('Quotation status: draft or invoiced');
+            $table->foreignId('company_id')->constrained('companies');
             $table->timestamps();
         });
     }

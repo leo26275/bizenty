@@ -40,11 +40,16 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'company_id' => 1
         ]);
 
         event(new Registered($user));
 
+
         Auth::login($user);
+
+        $user = Auth::user();
+        session(['company_id' => $user->company?->id]);
 
         return redirect(route('dashboard', absolute: false));
     }

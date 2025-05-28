@@ -1,0 +1,18 @@
+img.logo {
+    width: 100%;
+    max-width: 150px;
+}
+
+table.table01 {
+    border-collapse: collapse;
+    th,
+    td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #6a6969; /* solo borde inferior */
+    }
+
+    tr:last-child td {
+        border-bottom: none; /* opcional: quitar el borde en la última fila */
+    }
+}

@@ -1,12 +1,20 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, router   } from "@inertiajs/react";
+import { Head, usePage, router   } from "@inertiajs/react";
 import React, { useState, useEffect } from "react";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 
 export default function Dashboard() {
-    const [products, setProducts] = useState([]);
+
+    const { quotations } = usePage().props;
+
+    const handleDownload = () => {
+        router.visit(route('reports.quotation.download'), {
+            method: 'get',
+            preserveScroll: true
+        });
+    };
 
     return (
         <AuthenticatedLayout
@@ -29,26 +37,33 @@ export default function Dashboard() {
                                 onClick={() => router.get(route('quot.create')) }
                             />
 
+                            <Button
+                                label="+ Descargar cotizacion"
+                                severity="success"
+                                size="small"
+                                onClick={() => window.open(route('reports.quotation.download'), '_blank')}
+                            />
+
                             <DataTable
-                                value={products}
+                                value={quotations}
                                 size="small"
                                 tableStyle={{ minWidth: "50rem" }}
                             >
                                 <Column
-                                    field="code"
+                                    field="id"
                                     header="No. Cotizacion"
                                 ></Column>
                                 <Column field="name" header="Fecha"></Column>
                                 <Column
-                                    field="category"
+                                    field="customer_name"
                                     header="Cliente"
                                 ></Column>
                                 <Column
-                                    field="quantity"
+                                    field="total"
                                     header="Total"
                                 ></Column>
                                 <Column
-                                    field="quantity"
+                                    field="status"
                                     header="Estado"
                                 ></Column>
                             </DataTable>

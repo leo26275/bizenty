@@ -1,4 +1,3 @@
-import { Link, usePage, router } from "@inertiajs/react";
 import React, { useState, useContext, useRef } from "react";
 
 import { Button } from "primereact/button";
@@ -13,10 +12,11 @@ import AppTopbar from "./AppTopBar";
 import "@/Layouts/styles/layout.scss";
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+
     const { layoutConfig, layoutState } = useContext(LayoutContext);
     const topbarmenuRef = useRef(null);
     const topbarRef = useRef(null);
+
 
     const items = [
         {

@@ -33,7 +33,9 @@
 
         &.layout-static {
             .layout-main-container {
-                margin-left: 300px;
+                //margin-left: 300px;
+                max-width: 1200px;
+                margin: auto;
             }
 
             &.layout-static-inactive {
@@ -62,8 +64,9 @@
 
     .layout-wrapper {
         .layout-main-container {
-            margin-left: 0;
-            padding-left: 2rem;
+            //margin-left: 0;
+            //padding-left: 2rem;
+            max-width: 500px;
         }
 
         .layout-sidebar {
