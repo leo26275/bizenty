@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('company_name', 100);
             $table->string('legal_name', 150);
             $table->string('address', 255);
+            $table->string('website', 200);
             $table->string('phone', 20)->nullable(); // permite extensión o código de país
             $table->string('logo', 255); // URL o path al archivo
             $table->json('brand_colors')->nullable(); // colores como JSON

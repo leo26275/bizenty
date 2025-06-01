@@ -1,13 +1,61 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, usePage, router   } from "@inertiajs/react";
-import React, { useState, useEffect } from "react";
+import { Head, usePage, router } from "@inertiajs/react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { ContextMenu } from 'primereact/contextmenu';
+import { Tag } from 'primereact/tag';
 
 export default function Dashboard() {
 
     const { quotations } = usePage().props;
+
+
+    const cm = useRef(null);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const menuModel = [
+        { label: 'Edit', icon: 'pi pi-fw pi-pencil', command: () => editItem(selectedProduct) },
+        { label: 'View', icon: 'pi pi-fw pi-search', command: () => viewItem(selectedProduct) },
+        { label: 'Duplicate', icon: 'pi pi-fw pi-clone', command: () => duplicateItem(selectedProduct) },
+        { label: 'Invoice', icon: 'pi pi-fw pi-money-bill', command: () => invoice(selectedProduct) },
+        { label: 'Send', icon: 'pi pi-fw pi-send', command: () => sendItem(selectedProduct) },
+        { label: 'Download PDF', icon: 'pi pi-fw pi-file-pdf', command: () => downloadItem(selectedProduct) },
+        { label: 'Delete', icon: 'pi pi-fw pi-trash', command: () => deleteItem(selectedProduct) }
+    ];
+
+    /*--- Context Options Functions --- */
+    const editItem = (item) => {
+        router.get(route('quotation.create') + `?quotation_id=${item.id}&edit=true`);
+    }
+
+    const viewItem = (item) => {
+        router.get(route('quotation.create') + `?quotation_id=${item.id}&edit=false`);
+    }
+
+    const duplicateItem = (item) => {
+
+    }
+
+    const invoice = (item) => {
+
+    }
+
+    const sendItem = (item) => {
+
+    }
+
+    const downloadItem = (item) => {
+        const params = {quotation_id: item.id};
+        const url = route('reports.quotation.download', params)
+        window.open(url, '_blank');
+    }
+
+    const deleteItem = (item) => {
+
+    }
+    /*--- End / Context Options Functions --- */
+
 
     const handleDownload = () => {
         router.visit(route('reports.quotation.download'), {
@@ -15,6 +63,40 @@ export default function Dashboard() {
             preserveScroll: true
         });
     };
+
+    const headerTable = () => {
+        return (
+            <div>
+                Filtros
+            </div>
+        )
+    }
+
+    const priceBodyTemplate = (rowData) => {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(rowData.total);
+    };
+
+    const balanceBodyTemplate = (rowData) => {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(rowData.total);
+    };
+
+    const getSeverity = (value) => {
+        switch (value) {
+            case 'draft':
+                return 'info';
+
+            case 'invoiced':
+                return 'success';
+
+            default:
+                return null;
+        }
+    };
+
+    const statusBodyTemplate = (rowData) => {
+        return <Tag value={rowData.status} severity={getSeverity(rowData.status)}></Tag>;
+    };
+
 
     return (
         <AuthenticatedLayout
@@ -30,41 +112,49 @@ export default function Dashboard() {
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
-                            <Button
-                                label="+ Nueva Cotizacion"
-                                severity="success"
-                                size="small"
-                                onClick={() => router.get(route('quot.create')) }
-                            />
 
-                            <Button
-                                label="+ Descargar cotizacion"
-                                severity="success"
-                                size="small"
-                                onClick={() => window.open(route('reports.quotation.download'), '_blank')}
-                            />
+                            <div className="mb-5">
+                                <Button
+                                    label="+ Nueva Cotizacion"
+                                    severity="success"
+                                    size="small"
+                                    onClick={() => router.get(route('quotation.create')) }
+                                />
+                            </div>
 
+                            <ContextMenu model={menuModel} ref={cm} onHide={() => setSelectedProduct(null)} />
                             <DataTable
                                 value={quotations}
+                                onContextMenu={(e) => cm.current.show(e.originalEvent)} contextMenuSelection={selectedProduct} onContextMenuSelectionChange={(e) => setSelectedProduct(e.value)}
                                 size="small"
                                 tableStyle={{ minWidth: "50rem" }}
+                                showGridlines
+                                header={headerTable}
+                                paginator rows={10}
                             >
                                 <Column
                                     field="id"
-                                    header="No. Cotizacion"
+                                    header="Quotation"
                                 ></Column>
-                                <Column field="name" header="Fecha"></Column>
                                 <Column
                                     field="customer_name"
-                                    header="Cliente"
+                                    header="Customer"
                                 ></Column>
+                                <Column field="mov_date" header="Date"></Column>
                                 <Column
                                     field="total"
                                     header="Total"
+                                    body={priceBodyTemplate}
+                                ></Column>
+                                <Column
+                                    field="balance"
+                                    header="Balance"
+                                    body={balanceBodyTemplate}
                                 ></Column>
                                 <Column
                                     field="status"
-                                    header="Estado"
+                                    header="Status"
+                                    body={statusBodyTemplate}
                                 ></Column>
                             </DataTable>
                         </div>

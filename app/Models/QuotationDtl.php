@@ -12,7 +12,8 @@ class QuotationDtl extends Model
         'description',
         'unit_price',
         'quantity',
-        'total_amount'
+        'total_amount',
+        'quotation_id'
     ];
 
     protected static function boot()

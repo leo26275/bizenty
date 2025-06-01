@@ -39,7 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function(){
 
     Route::get('/quotation/create', [QuotationController::class, 'create'])->name('quotation.create');
     Route::post('/quotation', [QuotationController::class, 'storeOrUpdate'])->name('quotation.mergue');
-    Route::get('/reports/quotation/download', [ReportController::class, 'download'])->name('reports.quotation.download');
+    Route::get('/reports/quotation/{quotation_id}/download', [ReportController::class, 'download'])->name('reports.quotation.download');
 
 
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');

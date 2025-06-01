@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage, router } from "@inertiajs/react";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { InputText } from "primereact/inputtext";
 import { useFormik } from "formik";
 import { classNames } from "primereact/utils";
@@ -21,15 +21,32 @@ export default function Create() {
     const prefix_del = "DEL_";
 
     const [products, setProducts] = useState([]);
+    const [editMode, setEditMode] = useState(false);
     const [value, setValue] = useState("");
     const [editingRows, setEditingRows] = useState({});
     const descriptionRefs = useRef({});
-    const { categories, companyConfig } = usePage().props;
+    const [itemsTable, setItemsTable] = useState([]);
+    const {
+        categories,
+        companyConfig,
+        quotation_id,
+        edit,
+        quotation,
+        quotationDtls,
+    } = usePage().props;
 
     const categoryOptions = categories.map((cat) => ({
         name: cat.name,
         id: cat.id,
     }));
+
+
+
+    useEffect(() => {
+        if (quotation_id != undefined && !isNaN(parseInt(quotation_id))) {
+            setItemsTable(quotationDtls);
+        }
+    }, []);
 
     const columns = [
         { field: "type.name", header: "Categoria" },
@@ -38,8 +55,6 @@ export default function Create() {
         { field: "quantity", header: "Cantidad" },
         { field: "total_amount", header: "Total" },
     ];
-
-    const [itemsTable, setItemsTable] = useState([]);
 
     const onCellEditComplete = (e) => {
         let { rowData, newValue, field, originalEvent: event } = e;
@@ -62,12 +77,12 @@ export default function Create() {
 
     const formik = useFormik({
         initialValues: {
-            customer_name: "",
-            customer_address: "",
-            company_name: companyConfig.company_name,
-            company_address: companyConfig.address,
-            quotation_id: "0",
-            quotation_date: "ee",
+            customer_name: quotation?.customer_name || "",
+            customer_address: quotation?.customer_address || "",
+            company_name: companyConfig?.company_name,
+            company_address: companyConfig?.address,
+            quotation_id: quotation?.id || 0,
+            quotation_date: quotation?.mov_date || "",
             total: 700,
         },
         validate: (data) => {
@@ -253,6 +268,7 @@ export default function Create() {
                 <Button
                     size="small"
                     icon="pi pi-trash"
+                    disabled={!editMode}
                     className="p-button-rounded p-button-danger"
                     onClick={() => deleteItem(rowData.id)}
                     tooltip="Eliminar"
@@ -285,14 +301,24 @@ export default function Create() {
             }
         >
             <Head title="Cotizaciones" />
-            <Card title={headerCardTemplate(0)}>
+            <Card title={headerCardTemplate(formik.values.quotation_id)}>
                 <form onSubmit={formik.handleSubmit} className="">
                     <div className="flex flex-wrap justify-content-end gap-3">
-                        <Button
-                            label="Guardar"
-                            severity="success"
-                            type="submit"
-                        />
+                        {!editMode && (
+                            <Button
+                                label="Edit"
+                                severity="success"
+                                type="submit"
+                            />
+                        )}
+
+                        {editMode && (
+                            <Button
+                                label="Save"
+                                severity="success"
+                                type="submit"
+                            />
+                        )}
                     </div>
 
                     <div className="">
@@ -308,6 +334,7 @@ export default function Create() {
                                     <InputText
                                         value={formik.values.company_name}
                                         onChange={formik.handleChange}
+                                        disabled
                                         className={classNames(
                                             "p-inputtext-sm",
                                             "w-full",
@@ -325,6 +352,7 @@ export default function Create() {
                                     <InputTextarea
                                         id="company_address"
                                         name="company_address"
+                                        disabled
                                         value={formik.values.company_address}
                                         onChange={formik.handleChange}
                                         rows={5}
@@ -355,6 +383,7 @@ export default function Create() {
                                     <InputText
                                         id="customer_name"
                                         name="customer_name"
+                                        disabled
                                         value={formik.values.customer_name}
                                         onChange={formik.handleChange}
                                         className={classNames(
@@ -369,6 +398,7 @@ export default function Create() {
                                     />
                                     <Button
                                         icon="pi pi-search"
+                                        disabled={!editMode}
                                         className="p-button-warning"
                                     />
                                 </div>
@@ -380,6 +410,7 @@ export default function Create() {
                                         name="customer_address"
                                         value={formik.values.customer_address}
                                         onChange={formik.handleChange}
+                                        disabled
                                         rows={5}
                                         cols={50}
                                         className={classNames(
@@ -565,14 +596,16 @@ export default function Create() {
                         </div>
 
                         <div className="pt-2 local">
-                            <Button
-                                size="small"
-                                type="button"
-                                label="Agregar Nueva Linea"
-                                icon="pi pi-plus"
-                                className="bg-gray-500 hover:bg-gray-400 border-gray-600"
-                                onClick={addItem}
-                            />
+                            {editMode && (
+                                <Button
+                                    size="small"
+                                    type="button"
+                                    label="Agregar Nueva Linea"
+                                    icon="pi pi-plus"
+                                    className="bg-gray-500 hover:bg-gray-400 border-gray-600"
+                                    onClick={addItem}
+                                />
+                            )}
                         </div>
                     </div>
                     {/*Table Summary Content*/}
@@ -588,6 +621,7 @@ export default function Create() {
                             <InputTextarea
                                 id="txt_notes"
                                 className="w-full"
+                                disabled={!editMode}
                                 value={value}
                                 onChange={(e) => setValue(e.target.value)}
                                 rows={5}

@@ -17,7 +17,9 @@ return new class extends Migration
             $table->decimal('unit_price', 10, 2);
             $table->integer('quantity');
             $table->decimal('total_amount', 10, 2);
+            $table->foreignId('quotation_id')->constrained('quotations');
             $table->foreignId('category_id')->constrained('categories');
+            $table->enum('record_status', ['A', 'D'])->default('A')->comment('Quotation record status: A: Active, D: Deleted');
             $table->foreignId('company_id')->constrained('companies');
             $table->timestamps();
         });

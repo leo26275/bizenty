@@ -23,13 +23,31 @@ class QuotationController extends Controller
         ]);
     }
 
-    public function create(){
+    public function create(Request $request){
+        $quotation_id = $request->query('quotation_id');
         $categories = Category::select('id', 'name')->get();
-        $companyConfig = Company::find(Auth::user()->company_id);
+        $quotation = null;
+        $quotationDtls = null;
+
+        if (!is_null($quotation_id) && is_numeric($quotation_id)) {
+            $quotation = Quotation::find($quotation_id);
+            $quotationDtls = QuotationDtl::where('quotation_id', $quotation_id)->get();
+            if(is_null($quotation)){
+                return redirect()->route('quotation.index');
+            }
+            $companyConfig = Company::find($quotation->company_id);
+        }else{
+            $companyConfig = Company::find(Auth::user()->company_id);
+        }
+
 
         return Inertia::render('Quotation/Create', [
             'categories' => $categories,
-            'companyConfig' => $companyConfig
+            'companyConfig' => $companyConfig,
+            'quotation' => $quotation,
+            'quotationDtls' => $quotationDtls,
+            'quotation_id' => $quotation_id,
+            'edit' => $request->boolean('edit')
         ]);
     }
 
@@ -41,9 +59,11 @@ class QuotationController extends Controller
 
         DB::beginTransaction();
 
+        $tracking = "";
         try {
             // Buscar o crear la cotización
             $quotation_id = $encabezado['quotation_id'];
+            $cotizacion = null;
 
             if($quotation_id == '0'){
                 $cotizacion = Quotation::create([
@@ -66,6 +86,12 @@ class QuotationController extends Controller
 
             }
 
+            $tracking .= 'Cotizacion id ' . $cotizacion->id;
+
+            if(is_null($cotizacion)){
+                throw new Exception("Ocurrio un error en el manejo del encabezado para la cotización");
+            }
+
             //$cotizacion = Quotation::updateOrCreate
 
             // Procesar detalles (crear o actualizar)
@@ -79,12 +105,12 @@ class QuotationController extends Controller
                         'unit_price'    => $item['unit_price'],
                         'quantity'      => $item['quantity'],
                         'total_amount'  => $item['total_amount'],
-                        'quotation_id'  => $cotizacion->quotation_id,
+                        'quotation_id'  => $cotizacion->id,
                     ]);
                 } else {
                     // Actualizar detalle existente
                     QuotationDtl::where('id', $item['id'])
-                        ->where('quotation_id', $cotizacion->quotation_id)
+                        ->where('quotation_id', $cotizacion->id)
                         ->update([
                             'category_id'       => $item['type']['id'],
                             'description'   => $item['description'],
@@ -106,7 +132,7 @@ class QuotationController extends Controller
             return response()->json(['message' => 'Cotización procesada correctamente.'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['error' => 'Error al procesar la cotización.', 'details' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al procesar la cotización.' . $tracking, 'details' => $e->getMessage()], 500);
         }
 
     }
