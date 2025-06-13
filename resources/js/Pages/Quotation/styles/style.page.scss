@@ -16,3 +16,137 @@ table.table01 {
         border-bottom: none; /* opcional: quitar el borde en la última fila */
     }
 }
+
+body {
+    @media screen and (max-width: 580px) {
+        font-size: 16px;
+        line-height: 22px;
+    }
+}
+
+.wrapper {
+    margin: 0 auto;
+    padding: 40px;
+    max-width: 800px;
+}
+
+.tablez2 {
+    /*display: block;*/
+    border-collapse: collapse;
+    width: 100%;
+
+    .tcol1 {
+        width: 15%;
+    }
+    .tcol2 {
+        width: 25%;
+    }
+    .tcol3 {
+        width: 15%;
+    }
+    .tcol4 {
+        width: 15%;
+    }
+    .tcol5 {
+        width: 15%;
+    }
+
+    .tcol6 {
+        width: 15%;
+    }
+
+    th {
+        background-color: #1e97b2;
+        text-align: center;
+        color: white;
+        padding: 6px 13px;
+        border: 1px solid #d1d9e0;
+    }
+
+    tr {
+        background-color: #ffffff;
+        border-top: #d1d9e0b3;
+    }
+
+    td {
+        padding: 6px 13px;
+        border: 1px solid #d1d9e0;
+    }
+
+    .markdown-body table tr:nth-child(2n) {
+        background-color: #f6f8fa;
+    }
+}
+
+.tablez {
+    margin: 0 0 40px 0;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    display: "table";
+
+    @media screen and (max-width: 580px) {
+        display: "block";
+    }
+
+    .row {
+        display: "table-row";
+        background: #f6f6f6;
+
+        &:nth-of-type(odd) {
+            background: #e9e9e9;
+        }
+
+        &.header {
+            font-weight: 900;
+            color: #ffffff;
+            background: #ea6153;
+        }
+
+        &.green {
+            background: #27ae60;
+        }
+
+        &.blue {
+            background: #2980b9;
+        }
+
+        @media screen and (max-width: 580px) {
+            padding: 14px 0 7px;
+            display: "block";
+
+            &.header {
+                padding: 0;
+                height: 6px;
+            }
+
+            .cell {
+                display: none;
+            }
+
+            .cell {
+                margin-bottom: 10px;
+            }
+
+            &:before {
+                margin-bottom: 3px;
+                content: attr(data-title);
+                min-width: 98px;
+                font-size: 10px;
+                line-height: 10px;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #969696;
+                display: block;
+            }
+        }
+    }
+
+    .cell {
+        padding: 6px 12px;
+        display: table-cell;
+        @media screen and (max-width: 580px) {
+            padding: 2px 16px;
+            display: "block";
+        }
+    }
+}

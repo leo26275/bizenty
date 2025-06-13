@@ -13,47 +13,29 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
 import { v4 as uuidv4 } from "uuid";
 import { Divider } from "primereact/divider";
-import "@/Pages/Quotation/styles/style.page.scss";
+import "@/Pages/Invoices/styles/style.page.scss";
 import { Badge } from "primereact/badge";
 import CustomerList from "../Components/CustomersList";
-import { Tag } from "primereact/tag";
 
 export default function Create() {
     const prefix_new = "NEW_";
 
     const [editMode, setEditMode] = useState(false);
+    const [value, setValue] = useState("");
     const [itemsTable, setItemsTable] = useState([]);
     const {
         categories,
         companyConfig,
-        quotation_id,
+        invoice_id,
         edit,
-        quotation,
-        quotationDtls,
-        serverDate
+        invoice,
+        invoiceDtls,
     } = usePage().props;
-
 
     const categoryOptions = categories.map((cat) => ({
         name: cat.name,
-        code: cat.id,
+        id: cat.id,
     }));
-
-    const ValidTerms = [
-        {
-            code: 10,
-            name: "10 Days"
-        },
-        {
-            code: 20,
-            name: "20 Days"
-        },
-        {
-            code: 30,
-            name: "30 Days"
-        },
-    ];
-
 
     const [dialogVisible, setDialogVisible] = useState(false);
     const deletesIDs = [];
@@ -62,48 +44,20 @@ export default function Create() {
         setDialogVisible(true);
     };
 
-    useEffect(() => {
-        calculeSummary();
-    }, [itemsTable]);
-
-    const calculeSummary = () => {
-        let subTotalLine = itemsTable.reduce(
-            (acc, item) => acc + parseFloat(item.total_amount),
-            0
-        );
-
-        formik.values.subtotal = subTotalLine;
-        formik.values.total = formik.values.subtotal;
-        formik.values.balance_due =
-            formik.values.total - formik.values.amount_paid;
-    };
-
-    const getTermObject = (validityTerm) => {
-        let objOption = null;
-        ValidTerms.forEach((e, index) => {
-            if(e.code == validityTerm){
-                objOption = e;
-            }
-        });
-
-        return objOption;
-    }
-
     const formik = useFormik({
         initialValues: {
-            customer_id: quotation?.customer_id || 0,
-            customer_name: quotation?.customer_name || "",
-            customer_address: quotation?.customer_address || "",
+            customer_id: invoice?.customer_id || 0,
+            customer_name: invoice?.customer_name || "",
+            customer_address: invoice?.customer_address || "",
             company_name: companyConfig?.company_name,
             company_address: companyConfig?.address,
-            quotation_id: quotation?.id || 0,
-            quotation_date: quotation?.mov_date || serverDate,
-            validity_term: getTermObject(quotation),
-            subtotal: quotation?.subtotal || 0,
-            total: quotation?.total || 0,
-            amount_paid: quotation?.amount_paid || 0,
-            balance_due: quotation?.balance_due || 0,
-            notes: quotation?.notes || "",
+            invoice_id: invoice?.id || 0,
+            invoice_date: invoice?.mov_date || "",
+            subtotal: 0,
+            total: 0,
+            amount_paid: 0,
+            balance_due: 0,
+            notes: invoice?.notes || "",
         },
         validate: (data) => {
             let errors = {};
@@ -115,16 +69,13 @@ export default function Create() {
             return errors;
         },
         onSubmit: (data) => {
-
-            data.validity_term = data.validity_term.code;
-
             const payload = {
                 header: data,
                 details: itemsTable,
                 deletes: deletesIDs,
             };
 
-            router.post("/quotation", payload);
+            router.post("/invoice", payload);
             formik.resetForm();
         },
     });
@@ -140,33 +91,36 @@ export default function Create() {
     };
 
     useEffect(() => {
-        if (quotation_id != undefined && !isNaN(parseInt(quotation_id))) {
-            setItemsTable(quotationDtls.map((e, index) => {
-                return {
-                    id: e.id,
-                    description: e.description,
-                    unit_price: e.unit_price,
-                    quantity: e.quantity,
-                    total_amount: e.total_amount,
-                    category: {
-                        code: e.category.id,
-                        name: e.category.name
-                    }
-                }
-            }));
+        if (invoice_id != undefined && !isNaN(parseInt(invoice_id))) {
+            setItemsTable(
+                invoiceDtls.map((e, index) => {
+                    return {
+                        id: e.id,
+                        description: e.description,
+                        unit_price: e.unit_price,
+                        quantity: e.quantity,
+                        total_amount: e.total_amount,
+                        category: {
+                            code: e.category.id,
+                            name: e.category.name,
+                        },
+                    };
+                })
+            );
+
         } else {
             setEditMode(true);
         }
 
-        if(edit == true){
-          onEnableEditMode();
+        if (edit == true) {
+            onEnableEditMode();
         }
     }, []);
 
     const onEnableEditMode = () => {
         //Check status form, if form status is valid status for example
         setEditMode(true);
-    }
+    };
 
     const isPositiveInteger = (val) => {
         let str = String(val);
@@ -183,34 +137,25 @@ export default function Create() {
         return n !== Infinity && String(n) === str && n >= 0;
     };
 
-    const headerCardTemplate = (quotation_id) => {
-        return (
-            <div className="flex justify-content-between align-items-center">
-                <h3>
-                    Cotizacion Num.{" "}
-                    {quotation_id == null || quotation_id == 0 ? (
-                        <Badge value="NEW" severity="success"></Badge>
-                    ) : (
-                        quotation_id
-                    )}{" "}
-                </h3>
-            </div>
-        );
-    };
-
     const handleCustomerSelected = (customer) => {
         formik.values.customer_id = customer.id;
         formik.values.customer_name = customer.fullname;
         formik.values.customer_address = customer.address;
     };
 
-    const bodyDecimalTemplate = (currentValue) => {
-        let decimal = (parseFloat(currentValue) || 0).toFixed(2);
-
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-        }).format(decimal);
+    const headerCardTemplate = (invoice_id) => {
+        return (
+            <div className="flex justify-content-between align-items-center">
+                <h3>
+                    Invoice Num.{" "}
+                    {invoice_id == null || invoice_id == 0 ? (
+                        <Badge value="NEW" severity="success"></Badge>
+                    ) : (
+                        invoice_id
+                    )}{" "}
+                </h3>
+            </div>
+        );
     };
 
     const handleChange = (index, field, value) => {
@@ -231,6 +176,15 @@ export default function Create() {
         }
 
         setItemsTable(updated);
+    };
+
+    const bodyDecimalTemplate = (currentValue) => {
+        let decimal = (parseFloat(currentValue) || 0).toFixed(2);
+
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+        }).format(decimal);
     };
 
     /*Start Actions on Details Table */
@@ -296,17 +250,17 @@ export default function Create() {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Crear Cotizacion
+                    Create Invoice
                 </h2>
             }
         >
-            <Head title="Cotizaciones" />
+            <Head title="Create invoice" />
             <CustomerList
                 dialogVisible={dialogVisible}
                 setDialogVisible={setDialogVisible}
-                onCustomerSelected={handleCustomerSelected}
             />
-            <Card title={headerCardTemplate(formik.values.quotation_id)}>
+
+            <Card title={headerCardTemplate(formik.values.invoice_id)}>
                 <form onSubmit={formik.handleSubmit} className="">
                     <div className="flex flex-wrap justify-content-end gap-3">
                         {!editMode && (
@@ -383,7 +337,7 @@ export default function Create() {
                                     htmlFor="customer_name"
                                     className="font-bold block mb-2"
                                 >
-                                    Cliente
+                                    Customer
                                 </label>
                                 <div className="field p-inputgroup flex-1">
                                     <InputText
@@ -464,7 +418,7 @@ export default function Create() {
                                                 htmlFor="quotation_date"
                                                 className="col-fixed"
                                             >
-                                                Quotation date
+                                                Fecha Cotizacion
                                             </label>
                                             <InputText
                                                 id="quotation_date"
@@ -494,20 +448,24 @@ export default function Create() {
                                                 htmlFor="quotation_date"
                                                 className="col-fixed"
                                             >
-                                                Validity Term
+                                                Termino vencimiento
                                             </label>
-
-                                            <Dropdown
-                                                id="validity_term"
-                                                name="validity_term"
-                                                value={formik.values.validity_term}
-                                                options={ValidTerms}
+                                            <InputText
+                                                id="quotation_date"
+                                                value={formik.quotation_date}
                                                 onChange={formik.handleChange}
-                                                optionLabel="name"
-                                                placeholder="Select a Term"
+                                                className={classNames(
+                                                    "p-inputtext-sm",
+                                                    {
+                                                        "p-invalid":
+                                                            isFormFieldValid(
+                                                                "quotation_date"
+                                                            ),
+                                                    }
+                                                )}
                                             />
                                             {getFormErrorMessage(
-                                                "validity_term"
+                                                "quotation_date"
                                             )}
                                         </div>
                                     </div>
@@ -549,6 +507,8 @@ export default function Create() {
                                                 placeholder="Select a City"
                                                 className="w-full"
                                             />
+
+
                                         ) : (
                                             item.category.name
                                         )}
@@ -651,6 +611,7 @@ export default function Create() {
                             ))}
                         </tbody>
                     </table>
+                    {/*Table Items Content*/}
 
                     <div>
                         <div className="pt-2 local">
@@ -658,7 +619,7 @@ export default function Create() {
                                 <Button
                                     size="small"
                                     type="button"
-                                    label="Add new detail"
+                                    label="Agregar Nueva Linea"
                                     icon="pi pi-plus"
                                     className="bg-gray-500 hover:bg-gray-400 border-gray-600"
                                     onClick={addItem}
@@ -674,15 +635,14 @@ export default function Create() {
                                 htmlFor="txt_notes"
                                 className="col-fixed"
                             >
-                                Notes
+                                Notas
                             </label>
                             <InputTextarea
-                                id="notes"
-                                name="notes"
+                                id="txt_notes"
                                 className="w-full"
                                 disabled={!editMode}
-                                value={formik.values.notes}
-                                onChange={formik.handleChange}
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
                                 rows={5}
                                 cols={30}
                             />
@@ -707,14 +667,18 @@ export default function Create() {
                                         <td>Monto Pagado</td>
                                         <td>
                                             ${" "}
-                                            {formik.values.amount_paid.toFixed(2)}
+                                            {formik.values.amount_paid.toFixed(
+                                                2
+                                            )}
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>Total restante</td>
                                         <td>
                                             ${" "}
-                                            {formik.values.balance_due.toFixed(2)}
+                                            {formik.values.balance_due.toFixed(
+                                                2
+                                            )}
                                         </td>
                                     </tr>
                                 </tbody>

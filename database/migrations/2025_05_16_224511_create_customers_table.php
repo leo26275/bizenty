@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('middle_name', 50); //Segundo nombre (opcional, ya que muchas personas no lo tienen)
             $table->string('last_name', 50); // Apellido (puede ser solo uno o más en caso de apellidos compuestos).
             $table->string('address', 255)->nullable();
+            $table->string('phone', 25);
             $table->foreignId('company_id')->constrained('companies');
             $table->timestamps();
         });

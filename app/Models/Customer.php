@@ -12,6 +12,7 @@ class Customer extends Model
         'middle_name',
         'last_name',
         'address',
+        'phone'
     ];
 
     protected static function boot()

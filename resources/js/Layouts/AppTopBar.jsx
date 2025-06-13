@@ -134,8 +134,18 @@ const AppTopbar = forwardRef((props, ref) => {
                     {
                         label: "Operaciones",
                         items: [
-                            { label: "Crear" },
-                            { label: "Filtrar registros" },
+                            {
+                                label: "Crear",
+                                command: () => {
+                                    router.get(route('invoice.create'))
+                                }
+                            },
+                            {
+                                label: "Filtrar registros",
+                                command: () => {
+                                    router.get(route('invoice.index'))
+                                }
+                            },
                         ],
                     },
                 ],

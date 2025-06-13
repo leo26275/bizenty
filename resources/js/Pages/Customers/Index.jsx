@@ -23,13 +23,13 @@ const Index = () => {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Clientes
+                    Customers
                 </h2>
             }
         >
-            <Card title="Lista de Clientes">
+            <Card title="Customers records">
                 <Button
-                    label="+ Agregar"
+                    label="+ Add"
                     severity="success"
                     size="small"
                     onClick={() => router.get(route("customers.create"))}
@@ -37,10 +37,11 @@ const Index = () => {
 
                 <DataTable value={transformedCustomers} paginator rows={10}>
                     <Column field="id" header="Id" />
-                    <Column field="fullname" header="Nombres" />
-                    <Column field="last_name" header="Apellidos" />
-                    <Column field="address" header="Dirección" />
-                    <Column field="created_at" header="Creado" />
+                    <Column field="fullname" header="Names" />
+                    <Column field="last_name" header="Lastname" />
+                    <Column field="phone" header="Phone" />
+                    <Column field="address" header="Address" />
+                    <Column field="created_at" header="Created at" />
                 </DataTable>
             </Card>
         </AuthenticatedLayout>

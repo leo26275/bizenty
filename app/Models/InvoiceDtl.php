@@ -25,4 +25,8 @@ class InvoiceDtl extends Model
             $quotation->company_id = Auth::user()->company_id;
         });
     }
+
+    public function category(){
+        return $this->belongsTo(Category::class);
+    }
 }

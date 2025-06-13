@@ -28,4 +28,13 @@ class QuotationDtl extends Model
             $quotationDtl->company_id = Auth::user()->company_id;
         });
     }
+
+    public function quotation(){
+        return $this->belongsTo(Quotation::class);
+    }
+
+    public function category(){
+        return $this->belongsTo(Category::class);
+    }
+
 }

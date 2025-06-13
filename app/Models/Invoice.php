@@ -26,4 +26,12 @@ class Invoice extends Model
             $quotation->company_id = Auth::user()->company_id;
         });
     }
+
+    public function customer(){
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function details() : HasMany {
+        return $this->hasMany(QuotationDtl::class);
+    }
 }

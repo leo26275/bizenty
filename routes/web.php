@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
@@ -31,15 +32,24 @@ Route::get('/categories/create', function () {
 
 Route::middleware(['auth', 'verified'])->group(function(){
 
-    Route::get('/quotation', [QuotationController::class, 'index'])->name('quotation.index');
+
 
     /*Route::get('/quotation/create', function () {
         return Inertia::render('Quotation/Create');
     })->name('quotation.create');*/
 
+    Route::get('/quotation', [QuotationController::class, 'index'])->name('quotation.index');
     Route::get('/quotation/create', [QuotationController::class, 'create'])->name('quotation.create');
+    Route::post('/quotation/duplicate/{quotation_id}', [QuotationController::class, 'duplicate'])->name('quotation.duplicate');
+    Route::post('/quotation/invoicing/{quotation_id}', [QuotationController::class, 'invoicing'])->name('quotation.invoicing');
+    Route::patch('/quotation/delete/{quotation_id}', [QuotationController::class, 'delete'])->name('quotation.delete');
     Route::post('/quotation', [QuotationController::class, 'storeOrUpdate'])->name('quotation.mergue');
     Route::get('/reports/quotation/{quotation_id}/download', [ReportController::class, 'download'])->name('reports.quotation.download');
+
+
+    Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoice.create');
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoice.index');
+
 
 
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
@@ -53,6 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function(){
 
     Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/api/customers/all', [CustomerController::class, 'all'])->name('customers.wsindex');
 });
 
 Route::middleware('auth')->group(function () {

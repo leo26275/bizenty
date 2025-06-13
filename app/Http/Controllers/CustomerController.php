@@ -15,6 +15,7 @@ class CustomerController extends Controller
             'middle_name' => 'string|max:50',
             'last_name' => 'required|string|max:50',
             'address' => 'required|string|max:255',
+            'phone' => 'required|string|max:25'
         ]);
 
         Customer::create($validated);
@@ -30,5 +31,11 @@ class CustomerController extends Controller
         return Inertia::render('Customers/Index', [
             'customers' => $customers
         ]);
+    }
+
+    public function all(){
+        $customers = Customer::all();
+
+        return $customers;
     }
 }

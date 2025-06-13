@@ -9,9 +9,9 @@ import { Tag } from 'primereact/tag';
 
 export default function Dashboard() {
 
-    const { quotations } = usePage().props;
+    const { invoices } = usePage().props;
 
-    console.log(quotations);
+    console.log(invoices);
 
 
     const cm = useRef(null);
@@ -109,7 +109,7 @@ export default function Dashboard() {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Cotizaciones
+                    Invoices
                 </h2>
             }
         >
@@ -122,16 +122,16 @@ export default function Dashboard() {
 
                             <div className="mb-5">
                                 <Button
-                                    label="+ Nueva Cotizacion"
+                                    label="+ New Invoice"
                                     severity="success"
                                     size="small"
-                                    onClick={() => router.get(route('quotation.create')) }
+                                    onClick={() => router.get(route('invoice.create')) }
                                 />
                             </div>
 
                             <ContextMenu model={menuModel} ref={cm} onHide={() => setSelectedProduct(null)} />
                             <DataTable
-                                value={quotations}
+                                value={invoices}
                                 onContextMenu={(e) => cm.current.show(e.originalEvent)} contextMenuSelection={selectedProduct} onContextMenuSelectionChange={(e) => setSelectedProduct(e.value)}
                                 size="small"
                                 tableStyle={{ minWidth: "50rem" }}
@@ -141,7 +141,7 @@ export default function Dashboard() {
                             >
                                 <Column
                                     field="id"
-                                    header="Quotation"
+                                    header="Invoice"
                                 ></Column>
                                 <Column
                                     body={fullNameTemplate}

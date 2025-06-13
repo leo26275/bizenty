@@ -12,7 +12,8 @@ const Create = () => {
             first_name: "",
             middle_name: "",
             last_name: "",
-            address: ""
+            address: "",
+            phone: ""
         },
         validate: (data) => {
             let errors = {};
@@ -21,12 +22,15 @@ const Create = () => {
                 errors.first_name = "El nombre es requerido";
             }
 
-
             if (!data.last_name) {
                 errors.last_name = "Los apellidos son requeridos";
             }
 
             if (!data.address) {
+                errors.address = "La direccion es requerida";
+            }
+
+            if (!data.phone) {
                 errors.address = "La direccion es requerida";
             }
 
@@ -53,7 +57,7 @@ const Create = () => {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Crear Cliente
+                    Create Customer
                 </h2>
             }
         >
@@ -61,7 +65,7 @@ const Create = () => {
             <div className="form-demo">
                 <div className="flex justify-content-center">
                     <div className="card">
-                        <h5 className="text-center">DATOS DEL CLIENTE</h5>
+                        <h5 className="text-center">Customer information</h5>
                         <form
                             onSubmit={formik.handleSubmit}
                             className="p-fluid"
@@ -85,7 +89,7 @@ const Create = () => {
                                             "p-error": isFormFieldValid("first_name"),
                                         })}
                                     >
-                                        Primer Nombre*
+                                        First name*
                                     </label>
                                 </span>
                                 {getFormErrorMessage("first_name")}
@@ -110,7 +114,7 @@ const Create = () => {
                                             "p-error": isFormFieldValid("middle_name"),
                                         })}
                                     >
-                                        Segundo Nombre
+                                        Middle name
                                     </label>
                                 </span>
                                 {getFormErrorMessage("middle_name")}
@@ -135,7 +139,7 @@ const Create = () => {
                                             "p-error": isFormFieldValid("last_name"),
                                         })}
                                     >
-                                        Apellidos*
+                                        Last name*
                                     </label>
                                 </span>
                                 {getFormErrorMessage("last_name")}
@@ -160,15 +164,41 @@ const Create = () => {
                                             "p-error": isFormFieldValid("address"),
                                         })}
                                     >
-                                        Direccion*
+                                        Address*
                                     </label>
                                 </span>
                                 {getFormErrorMessage("address")}
                             </div>
 
+
+                            <div className="field">
+                                <span className="p-float-label">
+                                    <InputText
+                                        id="phone"
+                                        name="phone"
+                                        value={formik.values.phone}
+                                        onChange={formik.handleChange}
+                                        autoFocus
+                                        className={classNames({
+                                            "p-invalid":
+                                                isFormFieldValid("phone"),
+                                        })}
+                                    />
+                                    <label
+                                        htmlFor="phone"
+                                        className={classNames({
+                                            "p-error": isFormFieldValid("phone"),
+                                        })}
+                                    >
+                                        Phone*
+                                    </label>
+                                </span>
+                                {getFormErrorMessage("phone")}
+                            </div>
+
                             <Button
                                 type="submit"
-                                label="Submit"
+                                label="Save"
                                 className="mt-2"
                             />
                         </form>

@@ -4,18 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+//use App\Models\Customer;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quotation extends Model
 {
     protected $fillable = [
-        'customer_name',
-        'customer_address',
+        'customer_id',
+        'subtotal',
+        'status',
+        'record_status',
+        'company_id',
         'mov_date',
-        'total'
+        'total',
+        'amount_paid',
+        'balance_due',
+        'notes',
+        'validity_term'
     ];
 
-    protected static function boot()
-    {
+
+    protected static function boot(){
         parent::boot();
 
         static::creating(function ($quotation) {
@@ -27,4 +36,13 @@ class Quotation extends Model
             $quotation->company_id = Auth::user()->company_id;
         });
     }
+
+    public function customer(){
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function details() : HasMany {
+        return $this->hasMany(QuotationDtl::class);
+    }
+
 }
