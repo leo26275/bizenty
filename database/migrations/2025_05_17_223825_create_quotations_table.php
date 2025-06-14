@@ -19,8 +19,9 @@ return new class extends Migration
             $table->decimal('amount_paid', 10, 2);
             $table->decimal('balance_due', 10, 2);
             $table->string('notes', 150)->nullable();
-            $table->unsignedTinyInteger('validity_term');
             $table->date('mov_date')->comment('Date when the quotation was create (YYYY-MM-DD)');
+            $table->unsignedTinyInteger('validity_term');
+            $table->date('expiration_date');
             $table->enum('status', ['draft', 'invoiced'])->default('draft')->comment('Quotation status: draft, invoiced');
             $table->enum('record_status', ['A', 'D'])->default('A')->comment('Quotation record status: A: Active, D: Deleted');
             $table->foreignId('company_id')->constrained('companies');

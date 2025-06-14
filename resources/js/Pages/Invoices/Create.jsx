@@ -16,6 +16,7 @@ import { Divider } from "primereact/divider";
 import "@/Pages/Invoices/styles/style.page.scss";
 import { Badge } from "primereact/badge";
 import CustomerList from "../Components/CustomersList";
+import { toDateFormat } from "@/Shared/Utils";
 
 export default function Create() {
     const prefix_new = "NEW_";
@@ -30,33 +31,85 @@ export default function Create() {
         edit,
         invoice,
         invoiceDtls,
+        serverDate
     } = usePage().props;
 
     const categoryOptions = categories.map((cat) => ({
         name: cat.name,
-        id: cat.id,
+        code: cat.id,
     }));
 
     const [dialogVisible, setDialogVisible] = useState(false);
-    const deletesIDs = [];
+    const [deleteIDs, setDeleteIDs] = useState([]);
+
+    const ValidTerms = [
+        {
+            code: 10,
+            name: "10 Days"
+        },
+        {
+            code: 20,
+            name: "20 Days"
+        },
+        {
+            code: 30,
+            name: "30 Days"
+        },
+    ];
 
     const onOpenCustomerModal = () => {
         setDialogVisible(true);
     };
 
+    const customerNameNode = (customer) => {
+        let fullname = null;
+        if(customer){
+            fullname = customer.first_name + " " + customer.middle_name + " " + customer.address;
+        }
+        return fullname;
+    }
+
+    useEffect(() => {
+        calculeSummary();
+    }, [itemsTable]);
+
+    const calculeSummary = () => {
+        let subTotalLine = itemsTable.reduce(
+            (acc, item) => acc + parseFloat(item.total_amount),
+            0
+        );
+
+        formik.values.subtotal = subTotalLine;
+        formik.values.total = formik.values.subtotal;
+        formik.values.balance_due =
+            formik.values.total - formik.values.amount_paid;
+    };
+
+    const getTermObject = (validityTerm) => {
+        let objOption = null;
+        ValidTerms.forEach((e, index) => {
+            if(e.code == validityTerm){
+                objOption = e;
+            }
+        });
+
+        return objOption;
+    }
+
     const formik = useFormik({
         initialValues: {
             customer_id: invoice?.customer_id || 0,
-            customer_name: invoice?.customer_name || "",
-            customer_address: invoice?.customer_address || "",
+            customer_name: customerNameNode(invoice?.customer) || "",
+            customer_address: invoice?.customer?.address || "",
             company_name: companyConfig?.company_name,
             company_address: companyConfig?.address,
             invoice_id: invoice?.id || 0,
-            invoice_date: invoice?.mov_date || "",
-            subtotal: 0,
-            total: 0,
-            amount_paid: 0,
-            balance_due: 0,
+            invoice_date: toDateFormat((invoice?.mov_date, serverDate), 'yyyy-MM-dd'),
+            validity_term: getTermObject(invoice?.validity_term),
+            subtotal: parseFloat(invoice?.subtotal || 0),
+            total: parseFloat(invoice?.total || 0),
+            amount_paid: parseFloat(invoice?.amount_paid || 0),
+            balance_due: parseFloat(invoice?.balance_due || 0),
             notes: invoice?.notes || "",
         },
         validate: (data) => {
@@ -69,10 +122,12 @@ export default function Create() {
             return errors;
         },
         onSubmit: (data) => {
+            data.validity_term = data.validity_term.code;
+
             const payload = {
                 header: data,
                 details: itemsTable,
-                deletes: deletesIDs,
+                deletes: deleteIDs,
             };
 
             router.post("/invoice", payload);
@@ -238,9 +293,12 @@ export default function Create() {
     };
 
     const deleteItem = (id) => {
+         const deletesTemp = [...deleteIDs];
+
         if (id !== prefix_new && !isNaN(parseInt(id))) {
-            deletesIDs.push(id);
+            deletesTemp.push(id);
         }
+        setDeleteIDs(deletesTemp);
         const updatedItems = itemsTable.filter((item) => item.id !== id);
         setItemsTable(updatedItems);
     };
@@ -258,6 +316,7 @@ export default function Create() {
             <CustomerList
                 dialogVisible={dialogVisible}
                 setDialogVisible={setDialogVisible}
+                onCustomerSelected={handleCustomerSelected}
             />
 
             <Card title={headerCardTemplate(formik.values.invoice_id)}>
@@ -415,16 +474,16 @@ export default function Create() {
                                     <div className="flex  flex-column justify-content-end align-items-end align-content-end pt-4">
                                         <div className="field">
                                             <label
-                                                htmlFor="quotation_date"
+                                                htmlFor="invoice_date"
                                                 className="col-fixed"
                                             >
                                                 Fecha Cotizacion
                                             </label>
                                             <InputText
-                                                id="quotation_date"
-                                                name="quotation_date"
+                                                id="invoice_date"
+                                                name="invoice_date"
                                                 value={
-                                                    formik.values.quotation_date
+                                                    formik.values.invoice_date
                                                 }
                                                 disabled
                                                 onChange={formik.handleChange}
@@ -433,40 +492,37 @@ export default function Create() {
                                                     {
                                                         "p-invalid":
                                                             isFormFieldValid(
-                                                                "quotation_date"
+                                                                "invoice_date"
                                                             ),
                                                     }
                                                 )}
                                             />
                                             {getFormErrorMessage(
-                                                "quotation_date"
+                                                "invoice_date"
                                             )}
                                         </div>
 
                                         <div className="field">
                                             <label
-                                                htmlFor="quotation_date"
+                                                htmlFor="validity_term"
                                                 className="col-fixed"
                                             >
-                                                Termino vencimiento
+                                                 Validity Term
                                             </label>
-                                            <InputText
-                                                id="quotation_date"
-                                                value={formik.quotation_date}
+
+                                            <Dropdown
+                                                id="validity_term"
+                                                name="validity_term"
+                                                value={formik.values.validity_term}
+                                                options={ValidTerms}
                                                 onChange={formik.handleChange}
-                                                className={classNames(
-                                                    "p-inputtext-sm",
-                                                    {
-                                                        "p-invalid":
-                                                            isFormFieldValid(
-                                                                "quotation_date"
-                                                            ),
-                                                    }
-                                                )}
+                                                optionLabel="name"
+                                                placeholder="Select a Term"
                                             />
                                             {getFormErrorMessage(
-                                                "quotation_date"
+                                                "validity_term"
                                             )}
+
                                         </div>
                                     </div>
                                 </div>
@@ -635,14 +691,15 @@ export default function Create() {
                                 htmlFor="txt_notes"
                                 className="col-fixed"
                             >
-                                Notas
+                                Notes
                             </label>
                             <InputTextarea
-                                id="txt_notes"
+                                id="notes"
+                                name="notes"
                                 className="w-full"
                                 disabled={!editMode}
-                                value={value}
-                                onChange={(e) => setValue(e.target.value)}
+                                value={formik.values.notes}
+                                onChange={formik.handleChange}
                                 rows={5}
                                 cols={30}
                             />

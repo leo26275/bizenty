@@ -16,6 +16,7 @@ class Quotation extends Model
         'record_status',
         'company_id',
         'mov_date',
+        'expiration_date',
         'total',
         'amount_paid',
         'balance_due',
@@ -44,5 +45,11 @@ class Quotation extends Model
     public function details() : HasMany {
         return $this->hasMany(QuotationDtl::class);
     }
+
+    /*this configuracion return a Carbon Object on the model */
+    protected $casts = [
+        'mov_date' => 'date', // o 'datetime' si el campo lo requiere
+        'expiration_date' => 'date'
+    ];
 
 }

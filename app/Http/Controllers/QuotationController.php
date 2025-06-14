@@ -38,7 +38,7 @@ class QuotationController extends Controller
         $quotationDtls = null;
 
         if (!is_null($quotation_id) && is_numeric($quotation_id)) {
-            $quotation = Quotation::find($quotation_id);
+            $quotation = Quotation::where('id', $quotation_id)->with('customer')->first();
             $quotationDtls = QuotationDtl::where('quotation_id', $quotation_id)->with('category')->get();
             if(is_null($quotation)){
                 return redirect()->route('quotation.index');
@@ -56,7 +56,7 @@ class QuotationController extends Controller
             'quotationDtls' => $quotationDtls,
             'quotation_id' => $quotation_id,
             'edit' => $editMode,
-            'serverDate' => Carbon::now()->format('Y-m-d')
+            'serverDate' => Carbon::now()
         ]);
     }
 
@@ -71,11 +71,14 @@ class QuotationController extends Controller
         $tracking = "";
         try {
             // Buscar o crear la cotización
-            $quotation_id = $encabezado['quotation_id'];
+            $quotation_id = intval($encabezado['quotation_id']);
             $cotizacion = null;
 
+            if($quotation_id == 0){
 
-            if($quotation_id == '0'){
+                $validity_term = intval($encabezado['validity_term']);
+                $mov_date = Carbon::today();
+                $expiration_date = $mov_date->addDays($validity_term);
 
                 $cotizacion = Quotation::create([
                     'customer_id'   => $encabezado['customer_id'],
@@ -84,16 +87,26 @@ class QuotationController extends Controller
                     'amount_paid'   => $encabezado['amount_paid'],
                     'balance_due'   => $encabezado['balance_due'],
                     'notes'         => $encabezado['notes'],
-                    'validity_term' => intval($encabezado['validity_term']),
-                    'mov_date'      => now()->toDateString()
+                    'validity_term' => $validity_term,
+                    'mov_date'      => $mov_date,
+                    'expiration_date' => $expiration_date
                 ]);
             }else{
-                $cotizacion = Quotation::where('id', $quotation_id)
-                 ->update([
-                    'customer_id'      => $encabezado['customer_id'],
-                    'total'            => $encabezado['total']
-                 ]);
+                $cotizacion = Quotation::find($quotation_id);
+                //throw error if not exists record
+                $validity_term = intval($encabezado['validity_term']);
+                $expiration_date = $cotizacion->mov_date->addDays($validity_term);
 
+
+                $cotizacion->customer_id = $encabezado['customer_id'];
+                $cotizacion->subtotal =  $encabezado['subtotal'];
+                $cotizacion->total = $encabezado['total'];
+                $cotizacion->amount_paid = $encabezado['amount_paid'];
+                $cotizacion->balance_due = $encabezado['balance_due'];
+                $cotizacion->notes = $encabezado['notes'];
+                $cotizacion->validity_term = $validity_term;
+                $cotizacion->expiration_date = $expiration_date;
+                $cotizacion->save();
             }
 
             $tracking .= 'Cotizacion id ' . $cotizacion->id;
@@ -101,6 +114,7 @@ class QuotationController extends Controller
             if(is_null($cotizacion)){
                 throw new Exception("Ocurrio un error en el manejo del encabezado para la cotización");
             }
+
 
             // Procesar detalles (crear o actualizar)
             foreach ($detalles as $item) {
@@ -128,15 +142,17 @@ class QuotationController extends Controller
                 }
             }
 
+            Log::error($deletes);
+
             // Eliminar detalles indicados
             if (!empty($deletes)) {
                 QuotationDtl::whereIn('id', $deletes)
-                    ->where('quotation_id', $cotizacion->quotation_id)
+                    ->where('quotation_id', $cotizacion->id)
                     ->delete();
             }
 
             DB::commit();
-            return response()->json(['message' => 'Cotización procesada correctamente.'], 200);
+            return Redirect::to(route('quotation.create')."?quotation_id=$cotizacion->id");
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['error' => 'Error al procesar la cotización.' . $tracking, 'details' => $e->getMessage()], 500);
@@ -200,14 +216,17 @@ class QuotationController extends Controller
             Log::info('ingreso en el metodo 01');
             $invoice = Invoice::create([
                 'customer_id' => $quotation->customer_id,
+                'subtotal' => $quotation->subtotal,
                 'total' => $quotation->total,
-                'balance' => 0,
+                'amount_paid' => $quotation->amount_paid,
+                'balance_due' => $quotation->balance_due,
+                'notes' => $quotation->notes,
                 'mov_date' => now()->toDateString(),
                 'status' => 'draft',
                 'quotation_id' => $quotation->id
             ]);
 
-            Log::info('ingreso en el metodo 02');
+
             foreach($quotation->details as $QuotDetail){
                 $invoiceDetail = InvoiceDtl::create([
                     'category_id' => $QuotDetail->category_id,
@@ -217,8 +236,6 @@ class QuotationController extends Controller
                     'total_amount' => $QuotDetail->total_amount,
                     'invoice_id' => $invoice->id
                 ]);
-
-                $invoiceDetail->save();
             }
 
             //Change Quotation Status

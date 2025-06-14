@@ -20,7 +20,6 @@ export default function Dashboard() {
         { label: 'Edit', icon: 'pi pi-fw pi-pencil', command: () => editItem(selectedProduct) },
         { label: 'View', icon: 'pi pi-fw pi-search', command: () => viewItem(selectedProduct) },
         { label: 'Duplicate', icon: 'pi pi-fw pi-clone', command: () => duplicateItem(selectedProduct) },
-        { label: 'Invoice', icon: 'pi pi-fw pi-money-bill', command: () => invoice(selectedProduct) },
         { label: 'Send', icon: 'pi pi-fw pi-send', command: () => sendItem(selectedProduct) },
         { label: 'Download PDF', icon: 'pi pi-fw pi-file-pdf', command: () => downloadItem(selectedProduct) },
         { label: 'Delete', icon: 'pi pi-fw pi-trash', command: () => deleteItem(selectedProduct) }
@@ -28,19 +27,15 @@ export default function Dashboard() {
 
     /*--- Context Options Functions --- */
     const editItem = (item) => {
-        router.get(route('quotation.create') + `?quotation_id=${item.id}&edit=true`);
+        router.get(route('invoice.create') + `?invoice_id=${item.id}&edit=true`);
     }
 
     const viewItem = (item) => {
-        router.get(route('quotation.create') + `?quotation_id=${item.id}&edit=false`);
+        router.get(route('invoice.create') + `?invoice_id=${item.id}&edit=false`);
     }
 
     const duplicateItem = (item) => {
-        router.post(route('quotation.duplicate', {quotation_id: item.id}));
-    }
-
-    const invoice = (item) => {
-        router.post(route('quotation.invoicing', {quotation_id: item.id}));
+        router.post(route('invoice.duplicate', {invoice_id: item.id}));
     }
 
     const sendItem = (item) => {
@@ -48,19 +43,19 @@ export default function Dashboard() {
     }
 
     const downloadItem = (item) => {
-        const params = {quotation_id: item.id};
-        const url = route('reports.quotation.download', params)
+        const params = {invoice_id: item.id};
+        const url = route('reports.invoice.download', params)
         window.open(url, '_blank');
     }
 
     const deleteItem = (item) => {
-         router.patch(route('quotation.delete', {quotation_id: item.id}));
+         router.patch(route('quotation.delete', {invoice_id: item.id}));
     }
     /*--- End / Context Options Functions --- */
 
 
     const handleDownload = () => {
-        router.visit(route('reports.quotation.download'), {
+        router.visit(route('reports.invoice.download'), {
             method: 'get',
             preserveScroll: true
         });

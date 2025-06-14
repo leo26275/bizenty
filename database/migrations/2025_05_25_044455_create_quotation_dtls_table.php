@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('quotation_dtls', function (Blueprint $table) {
             $table->id();
-            $table->string('description', 300);
+            $table->string('description', 500);
             $table->decimal('unit_price', 10, 2);
             $table->integer('quantity');
             $table->decimal('total_amount', 10, 2);

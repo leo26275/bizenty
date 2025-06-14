@@ -20,9 +20,11 @@ return new class extends Migration
             $table->decimal('balance_due', 10, 2);
             $table->string('notes', 150)->nullable();
             $table->date('mov_date')->comment('Date when the quotation was create (YYYY-MM-DD)');
+            $table->unsignedTinyInteger('validity_term');
+            $table->date('expiration_date');
             $table->enum('status', ['draft', 'paid'])->default('draft')->comment('Invoice status: draft, paid');
             $table->enum('record_status', ['A', 'D'])->default('A')->comment('Invoice record status: A: Active, D: Deleted');
-            $table->foreignId('quotation_id')->constrained('quotations');
+            $table->foreignId('quotation_id')->nullable();
             $table->foreignId('company_id')->constrained('companies');
             $table->timestamps();
         });

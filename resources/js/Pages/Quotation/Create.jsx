@@ -17,6 +17,7 @@ import "@/Pages/Quotation/styles/style.page.scss";
 import { Badge } from "primereact/badge";
 import CustomerList from "../Components/CustomersList";
 import { Tag } from "primereact/tag";
+import { toDateFormat } from "@/Shared/Utils";
 
 export default function Create() {
     const prefix_new = "NEW_";
@@ -32,6 +33,8 @@ export default function Create() {
         quotationDtls,
         serverDate
     } = usePage().props;
+
+    console.log(quotation);
 
 
     const categoryOptions = categories.map((cat) => ({
@@ -56,7 +59,7 @@ export default function Create() {
 
 
     const [dialogVisible, setDialogVisible] = useState(false);
-    const deletesIDs = [];
+    const [deleteIDs, setDeleteIDs] = useState([]);
 
     const onOpenCustomerModal = () => {
         setDialogVisible(true);
@@ -89,20 +92,29 @@ export default function Create() {
         return objOption;
     }
 
+    const customerNameNode = (customer) => {
+        let fullname = null;
+        if(customer){
+            fullname = customer.first_name + " " + customer.middle_name + " " + customer.address;
+        }
+        return fullname;
+    }
+
+
     const formik = useFormik({
         initialValues: {
             customer_id: quotation?.customer_id || 0,
-            customer_name: quotation?.customer_name || "",
-            customer_address: quotation?.customer_address || "",
+            customer_name: customerNameNode(quotation?.customer) || "",
+            customer_address: quotation?.customer?.address || "",
             company_name: companyConfig?.company_name,
             company_address: companyConfig?.address,
             quotation_id: quotation?.id || 0,
-            quotation_date: quotation?.mov_date || serverDate,
-            validity_term: getTermObject(quotation),
-            subtotal: quotation?.subtotal || 0,
-            total: quotation?.total || 0,
-            amount_paid: quotation?.amount_paid || 0,
-            balance_due: quotation?.balance_due || 0,
+            quotation_date: toDateFormat((quotation?.mov_date || serverDate), 'yyyy-MM-dd'),
+            validity_term: getTermObject(quotation?.validity_term),
+            subtotal: parseFloat(quotation?.subtotal || 0),
+            total: parseFloat(quotation?.total || 0),
+            amount_paid: parseFloat(quotation?.amount_paid || 0),
+            balance_due: parseFloat(quotation?.balance_due || 0),
             notes: quotation?.notes || "",
         },
         validate: (data) => {
@@ -117,13 +129,13 @@ export default function Create() {
         onSubmit: (data) => {
 
             data.validity_term = data.validity_term.code;
-
             const payload = {
                 header: data,
                 details: itemsTable,
-                deletes: deletesIDs,
+                deletes: deleteIDs,
             };
 
+            //console.log(payload);
             router.post("/quotation", payload);
             formik.resetForm();
         },
@@ -284,9 +296,12 @@ export default function Create() {
     };
 
     const deleteItem = (id) => {
+
+        const deletesTemp = [...deleteIDs];
         if (id !== prefix_new && !isNaN(parseInt(id))) {
-            deletesIDs.push(id);
+            deletesTemp.push(id);
         }
+        setDeleteIDs(deletesTemp);
         const updatedItems = itemsTable.filter((item) => item.id !== id);
         setItemsTable(updatedItems);
     };
@@ -296,7 +311,7 @@ export default function Create() {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Crear Cotizacion
+                    Create Quotation
                 </h2>
             }
         >
@@ -491,7 +506,7 @@ export default function Create() {
 
                                         <div className="field">
                                             <label
-                                                htmlFor="quotation_date"
+                                                htmlFor="validity_term"
                                                 className="col-fixed"
                                             >
                                                 Validity Term
@@ -558,6 +573,7 @@ export default function Create() {
                                             <InputTextarea
                                                 className="w-full p-inputtext-sm"
                                                 value={item.description}
+                                                maxLength={500}
                                                 onChange={(e) =>
                                                     handleChange(
                                                         index,
@@ -568,6 +584,7 @@ export default function Create() {
                                                 onKeyDown={(e) =>
                                                     e.stopPropagation()
                                                 }
+                                                max
                                                 rows={3}
                                                 cols={30}
                                             />

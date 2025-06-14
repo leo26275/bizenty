@@ -44,11 +44,13 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::post('/quotation/invoicing/{quotation_id}', [QuotationController::class, 'invoicing'])->name('quotation.invoicing');
     Route::patch('/quotation/delete/{quotation_id}', [QuotationController::class, 'delete'])->name('quotation.delete');
     Route::post('/quotation', [QuotationController::class, 'storeOrUpdate'])->name('quotation.mergue');
-    Route::get('/reports/quotation/{quotation_id}/download', [ReportController::class, 'download'])->name('reports.quotation.download');
+    Route::get('/reports/quotation/{quotation_id}/download', [ReportController::class, 'downloadQuote'])->name('reports.quotation.download');
 
 
     Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoice.create');
+    Route::post('/invoice', [InvoiceController::class, 'storeOrUpdate'])->name('invoice.mergue');
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoice.index');
+    Route::get('/reports/invoice/{invoice_id}/download', [ReportController::class, 'downloadInvoice'])->name('reports.invoice.download');
 
 
 

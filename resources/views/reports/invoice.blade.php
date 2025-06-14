@@ -165,9 +165,9 @@
 
                             <div style="margin-top: 50px;"class="title01"><img src="{{ public_path('images/target.png') }}" style="width: 20px;" alt=""> Customer</div>
                             <div>
-                                <p class="m-0 fw-bold f-size02 text-color1">{{ $quotationHead->customer->first_name}} {{ $quotationHead->customer->middle_name}} {{ $quotationHead->customer->last_name}}</p>
-                                <p class="m-0 f-size01">{{ $quotationHead->customer->address }}</p>
-                                <p class="m-0 f-size01">{{ $quotationHead->customer->phone }}</p>
+                                <p class="m-0 fw-bold f-size02 text-color1">{{ $invoiceHead->customer->first_name}} {{ $invoiceHead->customer->middle_name}} {{ $invoiceHead->customer->last_name}}</p>
+                                <p class="m-0 f-size01">{{ $invoiceHead->customer->address }}</p>
+                                <p class="m-0 f-size01">{{ $invoiceHead->customer->phone }}</p>
                             </div>
                         </td>
                         <td style="text-align: right; border: none">
@@ -184,9 +184,9 @@
                             </div>
                             <div style="text-align: right;" class="mt-1">
                                 <p class="m-0 fw-bold f-size02 text-color1">Quotation</p>
-                                <p class="m-0 text-color2 f-size07 fw-bold">No. {{ $quotationHead->id }}</p>
+                                <p class="m-0 text-color2 f-size07 fw-bold">No. {{ $invoiceHead->id }}</p>
                                 <p class="m-0 m-0 mt-1 fw-bold f-size02 text-color1">Quote valid until:</p>
-                                <p class="m-0">{{ $quotationHead->expiration_date->format('Y-m-d') }}</p>
+                                <p class="m-0">{{ $invoiceHead->expiration_date->format('Y-m-d')}}</p>
                             </div>
                         </td>
                     </tr>
@@ -209,14 +209,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($quotationDtl as $i => $quote)
+                    @foreach ($invoiceDtl as $i => $invoice)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td>{{ quote['category']['name'] }}</td>
-                        <td>{{ $quote['description'] }}</td>
-                        <td>{{ $quote['unit_price'] }}</td>
-                        <td>{{ $quote['quantity'] }}</td>
-                        <td>{{ $qquoteuot['total_amount'] }}</td>
+                        <td>{{ $invoice['category']['name'] }}</td>
+                        <td>{{ $invoice['description'] }}</td>
+                        <td>{{ $invoice['unit_price'] }}</td>
+                        <td>{{ $invoice['quantity'] }}</td>
+                        <td>{{ $invoice['total_amount'] }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -227,19 +227,19 @@
                 <table style="max-width: 500px;" class="table01">
                     <tr>
                         <td>Sub Total</td>
-                        <td>$ {{ $quotationHead->subtotal }}</td>
+                        <td>$ {{ $invoiceHead->subtotal }}</td>
                     </tr>
                     <tr>
                         <td>Total</td>
-                        <td>$ {{ $quotationHead->total }}</td>
+                        <td>$ {{ $invoiceHead->total }}</td>
                     </tr>
                     <tr>
                         <td>Amount paid</td>
-                        <td>$ {{ $quotationHead->amount_paid }}</td>
+                        <td>$ {{ $invoiceHead->amount_paid }}</td>
                     </tr>
                     <tr>
                         <td>Balance due</td>
-                        <td>$ {{ $quotationHead->balance_due }}</td>
+                        <td>$ {{ $invoiceHead->balance_due }}</td>
                     </tr>
                 </table>
                 </div>
