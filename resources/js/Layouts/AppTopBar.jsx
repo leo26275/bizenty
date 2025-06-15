@@ -93,133 +93,122 @@ const AppTopbar = forwardRef((props, ref) => {
 
     const items = [
         {
-            label: "Cotizaciones",
+            label: "Quotations",
             icon: "pi pi-th-large",
             items: [
                 [
                     {
-                        label: "Operaciones",
+                        label: "Operations",
                         items: [
                             {
-                                label: "Crear",
+                                label: "Create",
                                 command: () => {
                                     router.get(route("quotation.create"));
                                 },
                             },
                             {
-                                label: "Filtrar registros",
+                                label: "All records",
                                 command: () => {
                                     router.get(route("quotation.index"));
                                 },
                             },
                         ],
                     },
-                ],
-                [
-                    {
-                        label: "Informes",
-                        items: [
-                            { label: "Por clientes" },
-                            { label: "Rango de fechas" },
-                        ],
-                    },
-                ],
+                ]
             ],
         },
         {
-            label: "Facturas",
+            label: "Invoices",
             icon: "pi pi-money-bill",
             items: [
                 [
                     {
-                        label: "Operaciones",
+                        label: "Operations",
                         items: [
                             {
-                                label: "Crear",
+                                label: "Create",
                                 command: () => {
                                     router.get(route('invoice.create'))
                                 }
                             },
                             {
-                                label: "Filtrar registros",
+                                label: "All records",
                                 command: () => {
                                     router.get(route('invoice.index'))
                                 }
                             },
                         ],
                     },
-                ],
-                [
-                    {
-                        label: "Informes",
-                        items: [
-                            { label: "Por clientes" },
-                            { label: "Rango de fechas" },
-                        ],
-                    },
-                ],
+                ]
             ],
         },
         {
-            label: "Clientes",
+            label: "Customers",
             icon: "pi pi-folder",
             items: [
                 [
                     {
-                        label: "Operaciones",
+                        label: "Operations",
                         items: [
                             {
-                                label: "Crear",
+                                label: "Create",
                                 command: () => {
                                     router.get(route("customers.create"));
                                 },
                             },
                             {
-                                label: "Filtrar registros",
+                                label: "All records",
                                 command: () => {
                                     router.get(route("customers.index"));
                                 },
                             },
                         ],
                     },
-                ],
-                [
-                    {
-                        label: "Informes",
-                        items: [{ label: "Todos" }],
-                    },
-                ],
+                ]
             ],
         },
         {
-            label: "Categorias",
+            label: "Categories",
             icon: "pi pi-box",
             items: [
                 [
                     {
-                        label: "Operaciones",
+                        label: "Operations",
                         items: [
                             {
-                                label: "Crear",
+                                label: "Create",
                                 command: () => {
                                     router.get(route("categories.create"));
                                 },
                             },
                             {
-                                label: "Filtrar registros",
+                                label: "All records",
                                 command: () => {
                                     router.get(route("categories.index"));
                                 },
                             },
                         ],
                     },
-                ],
+                ]
+            ],
+        },
+        {
+            label: "Company",
+            icon: "pi pi-shop",
+            items: [
                 [
                     {
-                        label: "Informes",
-                        items: [{ label: "Todos" }],
+                        label: "Information",
+                        items: [
+                            {
+                                label: "Setting",
+                                command: () => {
+                                    router.get(route("categories.create"));
+                                },
+                            }
+                        ],
                     },
-                ],
+                ]
             ],
         },
     ];

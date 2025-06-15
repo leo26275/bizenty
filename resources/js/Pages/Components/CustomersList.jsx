@@ -30,7 +30,7 @@ export default function CustomerList({
                     id: e.id,
                     fullname: `${e.first_name} ${e.middle_name} ${e.last_name}`,
                     address: e.address,
-                    phone: "0000-0000",
+                    phone: e.phone,
                 };
             });
 

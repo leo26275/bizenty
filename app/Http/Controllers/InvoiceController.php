@@ -16,12 +16,38 @@ use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
 {
-    public function index() : Response{
+    public function index(Request $request) : Response{
+
+        $invoiceId = $request->input('invoice_id');
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+        $status = $request->input('invoice_status');
+
+
         $invoices = Invoice::with(['customer:id,first_name,middle_name,last_name'])
+            ->when($invoiceId, function($query, $invoiceId){
+                return $query->where('id', $invoiceId);
+            })
+            ->when($startDate, function($query, $startDate){
+                $start = Carbon::parse($startDate)->startOfDay();
+                return $query->where('mov_date', '>=', $start);
+            })
+            ->when($endDate, function($query, $endDate){
+                $end = Carbon::parse($endDate)->endOfDay();
+                return $query->where('mov_date', '<=', $end);
+            })
+            ->when($status, function($query, $status){
+                return $query->where('status', $status['code']);
+            })
             ->where('record_status', 'A')
-            ->get();
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Invoices/Index', [
+            'filters' => [
+                'invoice_id' => $invoiceId
+            ],
             'invoices' => $invoices
         ]);
     }

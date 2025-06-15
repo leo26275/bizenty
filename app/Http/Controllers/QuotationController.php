@@ -20,12 +20,38 @@ use Carbon\Carbon;
 class QuotationController extends Controller
 {
 
-    public function index() : Response{
+    public function index(Request $request) : Response{
+
+        $quoteId = $request->input('quote_id');
+        $startDate = $request->input('startDate');
+        $endDate = $request->input('endDate');
+        $status = $request->input('quote_status');
+
+
         $quotations = Quotation::with(['customer:id,first_name,middle_name,last_name'])
+            ->when($quoteId, function($query, $quoteId){
+                return $query->where('id', $quoteId);
+            })
+            ->when($startDate, function($query, $startDate){
+                $start = Carbon::parse($startDate)->startOfDay();
+                return $query->where('mov_date', '>=', $start);
+            })
+            ->when($endDate, function($query, $endDate){
+                $end = Carbon::parse($endDate)->endOfDay();
+                return $query->where('mov_date', '<=', $end);
+            })
+            ->when($status, function($query, $status){
+                return $query->where('status', $status['code']);
+            })
             ->where('record_status', 'A')
-            ->get();
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Quotation/Index', [
+            'filters' => [
+                'quotation_id' => 8
+            ],
             'quotations' => $quotations
         ]);
     }

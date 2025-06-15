@@ -6,12 +6,44 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { ContextMenu } from 'primereact/contextmenu';
 import { Tag } from 'primereact/tag';
+import { Fieldset } from "primereact/fieldset";
+import { Calendar } from "primereact/calendar";
+import { FloatLabel } from "primereact/floatlabel";
+import { InputText } from "primereact/inputtext";
+import { Dropdown } from "primereact/dropdown";
+import { Paginator } from 'primereact/paginator';
+import { toDateFormat } from "@/Shared/Utils";
+import { Card } from "primereact/card";
 
 export default function Dashboard() {
 
-    const { invoices } = usePage().props;
+    const { invoices, filters } = usePage().props;
+    const [first, setFirst] = useState((invoices.current_page - 1) * invoices.per_page);
 
-    console.log(invoices);
+    const [filterValues, setFilterValues] = useState({
+        startDate: null,
+        endDate: null,
+        invoice_status: null,
+        invoice_id: null,
+    });
+
+    const handleChange = (name, value) => {
+        setFilterValues((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const statusOptions = [
+        {
+            code: 'draft',
+            name: "Draft",
+        },
+        {
+            code: 'paid',
+            name: "Paid",
+        }
+    ];
 
 
     const cm = useRef(null);
@@ -61,13 +93,6 @@ export default function Dashboard() {
         });
     };
 
-    const headerTable = () => {
-        return (
-            <div>
-                Filtros
-            </div>
-        )
-    }
 
     const priceBodyTemplate = (rowData) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(rowData.total);
@@ -100,6 +125,33 @@ export default function Dashboard() {
     };
 
 
+    const onExecuteFilter = () => {
+
+        router.get(route('invoice.index'), filterValues, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const onCleanFilter = () => {
+        setFilterValues({
+            startDate: null,
+            endDate: null,
+            invoice_status: null,
+            invoice_id: null
+        });
+
+        router.get(route('invoice.index'), {}, {
+            preserveState: false,
+            preserveScroll: true,
+        });
+    };
+
+    const dateTemplate = (rowData, field) => {
+        return toDateFormat(rowData[field], 'yyyy-MM-dd');
+    }
+
+
     return (
         <AuthenticatedLayout
             header={
@@ -112,26 +164,136 @@ export default function Dashboard() {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
+                    <div className="bg-white shadow-sm sm:rounded-lg">
+                        <Card>
 
                             <div className="mb-5">
                                 <Button
-                                    label="+ New Invoice"
+                                    label="+ Create Invoice"
                                     severity="success"
                                     size="small"
                                     onClick={() => router.get(route('invoice.create')) }
                                 />
                             </div>
+                            <Fieldset legend="Search filters" className="mb-3">
+                                <div className="card flex flex-wrap gap-3 p-fluid">
+                                    <div className="flex-auto">
+                                        <FloatLabel>
+                                            <Calendar
+                                                inputId="startDate"
+                                                className="p-inputtext-sm"
+                                                value={filterValues.startDate}
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        "startDate",
+                                                        e.value
+                                                    )
+                                                }
+                                                dateFormat="yy-mm-dd"
+                                            />
+                                            <label htmlFor="startDate">
+                                                Start date
+                                            </label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div className="flex-auto">
+                                        <FloatLabel>
+                                            <Calendar
+                                                inputId="endDate"
+                                                className="p-inputtext-sm"
+                                                value={filterValues.endDate}
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        "endDate",
+                                                        e.value
+                                                    )
+                                                }
+                                                dateFormat="yy-mm-dd"
+                                            />
+                                            <label htmlFor="endDate">
+                                                End date
+                                            </label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div className="flex-auto">
+                                        <FloatLabel>
+                                            <InputText
+                                                id="invoice_id"
+                                                name="invoice_id"
+                                                className="p-inputtext-sm"
+                                                value={filterValues.invoice_id}
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        "invoice_id",
+                                                        e.target.value
+                                                    )
+                                                }
+                                                keyfilter="int"
+                                            />
+                                            <label htmlFor="invoice_id">
+                                                Invoice #Id
+                                            </label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div className="flex-auto">
+                                        <FloatLabel>
+                                            <Dropdown
+                                                id="invoice_status"
+                                                name="invoice_status"
+                                                className="p-inputtext-sm"
+                                                value={
+                                                    filterValues.invoice_status
+                                                }
+                                                options={statusOptions}
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        "invoice_status",
+                                                        e.value
+                                                    )
+                                                }
+                                                optionLabel="name"
+                                                placeholder="Select"
+                                            />
 
+                                            <label htmlFor="status">
+                                                Status
+                                            </label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div className="flex-auto">
+                                        <Button
+                                            label="Search"
+                                            severity="secondary"
+                                            size="small"
+                                            icon="pi pi-search"
+                                            onClick={onExecuteFilter}
+                                            outlined
+                                            raised
+                                        />
+                                    </div>
+                                    <div className="flex-auto">
+                                        <Button
+                                            label="Clean"
+                                            severity="secondary"
+                                            size="small"
+                                            icon="pi pi-circle"
+                                            outlined
+                                            onClick={onCleanFilter}
+                                            raised
+                                        />
+                                    </div>
+                                </div>
+                                 <div className="card flex flex-wrap gap-3">
+
+                                 </div>
+                            </Fieldset>
                             <ContextMenu model={menuModel} ref={cm} onHide={() => setSelectedProduct(null)} />
                             <DataTable
-                                value={invoices}
+                                value={invoices.data}
                                 onContextMenu={(e) => cm.current.show(e.originalEvent)} contextMenuSelection={selectedProduct} onContextMenuSelectionChange={(e) => setSelectedProduct(e.value)}
                                 size="small"
                                 tableStyle={{ minWidth: "50rem" }}
                                 showGridlines
-                                header={headerTable}
                                 paginator rows={10}
                             >
                                 <Column
@@ -142,7 +304,12 @@ export default function Dashboard() {
                                     body={fullNameTemplate}
                                     header="Customer"
                                 ></Column>
-                                <Column field="mov_date" header="Date"></Column>
+                                <Column field="mov_date" header="Date"   body={(rowData) => dateTemplate(rowData, 'mov_date')}></Column>
+                                <Column
+                                    field="expiration_date"
+                                    header="Expiration"
+                                    body={(rowData) => dateTemplate(rowData, 'expiration_date')}
+                                ></Column>
                                 <Column
                                     field="total"
                                     header="Total"
@@ -159,7 +326,7 @@ export default function Dashboard() {
                                     body={statusBodyTemplate}
                                 ></Column>
                             </DataTable>
-                        </div>
+                        </Card>
                     </div>
                 </div>
             </div>

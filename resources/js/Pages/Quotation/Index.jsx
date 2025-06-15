@@ -11,9 +11,15 @@ import { Calendar } from "primereact/calendar";
 import { FloatLabel } from "primereact/floatlabel";
 import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
+import { Paginator } from "primereact/paginator";
+import { toDateFormat } from "@/Shared/Utils";
+import { Card } from "primereact/card";
 
 export default function Dashboard() {
-    const { quotations } = usePage().props;
+    const { quotations, filters } = usePage().props;
+    const [first, setFirst] = useState(
+        (quotations.current_page - 1) * quotations.per_page
+    );
 
     const [filterValues, setFilterValues] = useState({
         startDate: null,
@@ -31,10 +37,29 @@ export default function Dashboard() {
 
     const statusOptions = [
         {
-            code: 3,
+            code: "draft",
             name: "Draft",
         },
+        {
+            code: "invoiced",
+            name: "Invoiced",
+        },
     ];
+
+    const onPageChange = (event) => {
+        const page = event.page + 1;
+        router.get(
+            route("quotation.index"),
+            {
+                ...data,
+                page,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
+    };
 
     const cm = useRef(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -110,10 +135,6 @@ export default function Dashboard() {
     };
     /*--- End / Context Options Functions --- */
 
-    const onExecuteFilter = () => {};
-
-    const onCleanFilter = () => {};
-
     const priceBodyTemplate = (rowData) => {
         return new Intl.NumberFormat("en-US", {
             style: "currency",
@@ -126,6 +147,10 @@ export default function Dashboard() {
             style: "currency",
             currency: "USD",
         }).format(rowData.total);
+    };
+
+    const dateTemplate = (rowData, field) => {
+        return toDateFormat(rowData[field], "yyyy-MM-dd");
     };
 
     const fullNameTemplate = (rowData) => {
@@ -157,6 +182,31 @@ export default function Dashboard() {
         );
     };
 
+    const onExecuteFilter = () => {
+        router.get(route("quotation.index"), filterValues, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const onCleanFilter = () => {
+        setFilterValues({
+            startDate: null,
+            endDate: null,
+            quote_status: null,
+            quote_id: null,
+        });
+
+        router.get(
+            route("quotation.index"),
+            {},
+            {
+                preserveState: false,
+                preserveScroll: true,
+            }
+        );
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -169,8 +219,8 @@ export default function Dashboard() {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
+                    <div className="bg-white shadow-sm sm:rounded-lg">
+                        <Card>
                             <div className="mb-5">
                                 <Button
                                     label="+ Create Quotation"
@@ -225,13 +275,14 @@ export default function Dashboard() {
                                     <div className="flex-auto">
                                         <FloatLabel>
                                             <InputText
-                                                id="integer"
+                                                id="quote_id"
+                                                name="quote_id"
                                                 className="p-inputtext-sm"
                                                 value={filterValues.quote_id}
                                                 onChange={(e) =>
                                                     handleChange(
                                                         "quote_id",
-                                                        e.value
+                                                        e.target.value
                                                     )
                                                 }
                                                 keyfilter="int"
@@ -271,7 +322,7 @@ export default function Dashboard() {
                                             label="Search"
                                             severity="secondary"
                                             size="small"
-                                            icon="pi pi-check"
+                                            icon="pi pi-search"
                                             onClick={onExecuteFilter}
                                             outlined
                                             raised
@@ -282,16 +333,14 @@ export default function Dashboard() {
                                             label="Clean"
                                             severity="secondary"
                                             size="small"
-                                            icon="pi pi-check"
+                                            icon="pi pi-circle"
                                             outlined
                                             onClick={onCleanFilter}
                                             raised
                                         />
                                     </div>
                                 </div>
-                                 <div className="card flex flex-wrap gap-3">
-
-                                 </div>
+                                <div className="card flex flex-wrap gap-3"></div>
                             </Fieldset>
                             <ContextMenu
                                 model={menuModel}
@@ -299,7 +348,7 @@ export default function Dashboard() {
                                 onHide={() => setSelectedProduct(null)}
                             />
                             <DataTable
-                                value={quotations}
+                                value={quotations.data}
                                 onContextMenu={(e) =>
                                     cm.current.show(e.originalEvent)
                                 }
@@ -310,15 +359,22 @@ export default function Dashboard() {
                                 size="small"
                                 tableStyle={{ minWidth: "50rem" }}
                                 showGridlines
-                                paginator
-                                rows={10}
                             >
                                 <Column field="id" header="Quotation"></Column>
                                 <Column
                                     body={fullNameTemplate}
                                     header="Customer"
                                 ></Column>
-                                <Column field="mov_date" header="Date"></Column>
+                                <Column
+                                    field="mov_date"
+                                    header="Date"
+                                    body={(rowData) => dateTemplate(rowData, 'mov_date')}
+                                ></Column>
+                                <Column
+                                    field="expiration_date"
+                                    header="Expiration"
+                                    body={(rowData) => dateTemplate(rowData, 'expiration_date')}
+                                ></Column>
                                 <Column
                                     field="total"
                                     header="Total"
@@ -335,7 +391,15 @@ export default function Dashboard() {
                                     body={statusBodyTemplate}
                                 ></Column>
                             </DataTable>
-                        </div>
+
+                            <Paginator
+                                first={first}
+                                rows={quotations.per_page}
+                                totalRecords={quotations.total}
+                                onPageChange={onPageChange}
+                                template="PrevPageLink PageLinks NextPageLink"
+                            />
+                        </Card>
                     </div>
                 </div>
             </div>
