@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage, router } from "@inertiajs/react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -14,6 +14,8 @@ import { Dropdown } from "primereact/dropdown";
 import { Paginator } from "primereact/paginator";
 import { toDateFormat } from "@/Shared/Utils";
 import { Card } from "primereact/card";
+import { Dialog } from "primereact/dialog";
+import { Avatar } from "primereact/avatar";
 
 export default function Dashboard() {
     const { quotations, filters } = usePage().props;
@@ -27,6 +29,10 @@ export default function Dashboard() {
         quote_status: null,
         quote_id: null,
     });
+
+    const [showDlgEmail, setShowDlgEmail] = useState(false);
+    const [emailDestination, setEmailDestination] = useState("");
+    const [emailQuoteId, setEmailQuoteId] = useState(0);
 
     const handleChange = (name, value) => {
         setFilterValues((prev) => ({
@@ -122,7 +128,10 @@ export default function Dashboard() {
         router.post(route("quotation.invoicing", { quotation_id: item.id }));
     };
 
-    const sendItem = (item) => {};
+    const sendItem = (item) => {
+        setEmailQuoteId(item.id);
+        setShowDlgEmail(true);
+    };
 
     const downloadItem = (item) => {
         const params = { quotation_id: item.id };
@@ -207,6 +216,62 @@ export default function Dashboard() {
         );
     };
 
+    const onSendEmail = () => {
+        if(emailQuoteId == null || emailQuoteId == 0){
+            alert("An error has ocurred, the item id is not defined");
+            return;
+        }
+
+        let data = {
+            destination: emailDestination
+        }
+
+        router.post(`/quotation/email/${emailQuoteId}`,data, {
+            onSuccess: () => {
+                //Correo enviado
+            },
+            onError: () => {
+                console.error("Ocurrio un error");
+            },
+            onFinish: () => {
+                setShowDlgEmail(false);
+                setEmailQuoteId(0);
+            }
+        });
+
+    }
+
+    const headerDlgEmail = (
+        <div className="inline-flex align-items-center justify-content-center gap-2">
+            <Avatar
+                image={"/images/marketing.png"}
+                className="mr-2"
+                shape="circle"
+            />
+            <span className="font-bold white-space-nowrap">
+                Mail sending parameters
+            </span>
+        </div>
+    );
+
+    const footerDlgEmail = (
+        <div>
+            <Button
+                label="Cancel"
+                severity="secondary"
+                outlined
+                icon="pi pi-times"
+                onClick={() => setShowDlgEmail(false)}
+            />
+            <Button
+                label="Send"
+                outlined
+                icon="pi pi-send"
+                onClick={onSendEmail}
+            />
+        </div>
+    );
+
     return (
         <AuthenticatedLayout
             header={
@@ -231,6 +296,35 @@ export default function Dashboard() {
                                     }
                                 />
                             </div>
+                            <Dialog
+                                visible={showDlgEmail}
+                                modal
+                                header={headerDlgEmail}
+                                footer={footerDlgEmail}
+                                style={{ width: "50rem" }}
+                                onHide={() => {
+                                    if (!showDlgEmail) return;
+                                    setShowDlgEmail(false);
+                                }}
+                            >
+                                <Fieldset
+                                    legend="Destination"
+                                    className="mb-3 p-fluid"
+                                >
+                                    <FloatLabel>
+                                        <InputText
+                                            id="emailDestination"
+                                            name="emailDestination"
+                                            className="p-inputtext-sm"
+                                            value={emailDestination}
+                                            onChange={(e) => setEmailDestination(e.target.value)}
+                                        />
+                                        <label htmlFor="emailDestination">
+                                            Email destination
+                                        </label>
+                                    </FloatLabel>
+                                </Fieldset>
+                            </Dialog>
 
                             <Fieldset legend="Search filters" className="mb-3">
                                 <div className="card flex flex-wrap gap-3 p-fluid">
@@ -368,12 +462,16 @@ export default function Dashboard() {
                                 <Column
                                     field="mov_date"
                                     header="Date"
-                                    body={(rowData) => dateTemplate(rowData, 'mov_date')}
+                                    body={(rowData) =>
+                                        dateTemplate(rowData, "mov_date")
+                                    }
                                 ></Column>
                                 <Column
                                     field="expiration_date"
                                     header="Expiration"
-                                    body={(rowData) => dateTemplate(rowData, 'expiration_date')}
+                                    body={(rowData) =>
+                                        dateTemplate(rowData, "expiration_date")
+                                    }
                                 ></Column>
                                 <Column
                                     field="total"

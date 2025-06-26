@@ -203,7 +203,7 @@ const AppTopbar = forwardRef((props, ref) => {
                             {
                                 label: "Setting",
                                 command: () => {
-                                    router.get(route("categories.create"));
+                                    router.get(route("company.setting"));
                                 },
                             }
                         ],

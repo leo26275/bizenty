@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage, router } from "@inertiajs/react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -14,11 +14,16 @@ import { Dropdown } from "primereact/dropdown";
 import { Paginator } from 'primereact/paginator';
 import { toDateFormat } from "@/Shared/Utils";
 import { Card } from "primereact/card";
+import { Dialog } from "primereact/dialog";
+import { Avatar } from "primereact/avatar";
 
 export default function Dashboard() {
 
     const { invoices, filters } = usePage().props;
     const [first, setFirst] = useState((invoices.current_page - 1) * invoices.per_page);
+    const [showDlgEmail, setShowDlgEmail] = useState(false);
+    const [emailDestination, setEmailDestination] = useState("");
+    const [emailInvoiceId, setEmailInvoiceId] = useState(0);
 
     const [filterValues, setFilterValues] = useState({
         startDate: null,
@@ -71,8 +76,9 @@ export default function Dashboard() {
     }
 
     const sendItem = (item) => {
-
-    }
+        setEmailInvoiceId(item.id);
+        setShowDlgEmail(true);
+    };
 
     const downloadItem = (item) => {
         const params = {invoice_id: item.id};
@@ -152,6 +158,63 @@ export default function Dashboard() {
     }
 
 
+    const onSendEmail = () => {
+        if(emailInvoiceId == null || emailInvoiceId == 0){
+            alert("An error has ocurred, the item id is not defined");
+            return;
+        }
+
+        let data = {
+            destination: emailDestination
+        }
+
+        router.post(`/invoice/email/${emailInvoiceId}`,data, {
+            onSuccess: () => {
+                //Correo enviado
+            },
+            onError: () => {
+                console.error("Ocurrio un error");
+            },
+            onFinish: () => {
+                setShowDlgEmail(false);
+                setEmailQuoteId(0);
+            }
+        });
+
+    }
+
+    const headerDlgEmail = (
+        <div className="inline-flex align-items-center justify-content-center gap-2">
+            <Avatar
+                image={"/images/marketing.png"}
+                className="mr-2"
+                shape="circle"
+            />
+            <span className="font-bold white-space-nowrap">
+                Mail sending parameters
+            </span>
+        </div>
+    );
+
+    const footerDlgEmail = (
+        <div>
+            <Button
+                label="Cancel"
+                severity="secondary"
+                outlined
+                icon="pi pi-times"
+                onClick={() => setShowDlgEmail(false)}
+            />
+            <Button
+                label="Send"
+                outlined
+                icon="pi pi-send"
+                onClick={onSendEmail}
+            />
+        </div>
+    );
+
+
     return (
         <AuthenticatedLayout
             header={
@@ -175,6 +238,37 @@ export default function Dashboard() {
                                     onClick={() => router.get(route('invoice.create')) }
                                 />
                             </div>
+
+                            <Dialog
+                                visible={showDlgEmail}
+                                modal
+                                header={headerDlgEmail}
+                                footer={footerDlgEmail}
+                                style={{ width: "50rem" }}
+                                onHide={() => {
+                                    if (!showDlgEmail) return;
+                                    setShowDlgEmail(false);
+                                }}
+                            >
+                                <Fieldset
+                                    legend="Destination"
+                                    className="mb-3 p-fluid"
+                                >
+                                    <FloatLabel>
+                                        <InputText
+                                            id="emailDestination"
+                                            name="emailDestination"
+                                            className="p-inputtext-sm"
+                                            value={emailDestination}
+                                            onChange={(e) => setEmailDestination(e.target.value)}
+                                        />
+                                        <label htmlFor="emailDestination">
+                                            Email destination
+                                        </label>
+                                    </FloatLabel>
+                                </Fieldset>
+                            </Dialog>
+
                             <Fieldset legend="Search filters" className="mb-3">
                                 <div className="card flex flex-wrap gap-3 p-fluid">
                                     <div className="flex-auto">

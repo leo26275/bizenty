@@ -70,6 +70,8 @@ class InvoiceController extends Controller
             $companyConfig = Company::find(Auth::user()->company_id);
         }
 
+        $utils = new \stdClass();
+        $utils->storageUpload = asset('storage/uploads');
 
         return Inertia::render('Invoices/Create', [
             'categories' => $categories,
@@ -78,7 +80,8 @@ class InvoiceController extends Controller
             'invoiceDtls' => $invoiceDtls,
             'invoice_id' => $invoice_id,
             'edit' => $editMode,
-            'serverDate' => Carbon::now()
+            'serverDate' => Carbon::now(),
+            'utils' => $utils
         ]);
     }
 
@@ -132,7 +135,7 @@ class InvoiceController extends Controller
 
 
             if(is_null($invoice)){
-                throw new Exception("Ocurrio un error en el manejo del encabezado para la cotización");
+                throw new \Exception("Ocurrio un error en el manejo del encabezado para la cotización");
             }
 
 

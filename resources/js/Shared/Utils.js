@@ -11,8 +11,8 @@ import { parseISO, format } from "date-fns";
  * -------------------------------------------------------------------------------
  */
 export function toDateFormat(dateString, mask) {
-    console.log("Fecha en formato ISO");
-    console.log(dateString);
+    //console.log("Fecha en formato ISO");
+    //console.log(dateString);
     if (dateString == null || dateString.trim().length == 0) {
         return "";
     }

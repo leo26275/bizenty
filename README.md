@@ -64,3 +64,8 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+Crear link simbolico 
+php artisan storage:link
+Esto crea el enlace simbólico public/storage → storage/app/public.

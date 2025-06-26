@@ -31,7 +31,8 @@ export default function Create() {
         edit,
         quotation,
         quotationDtls,
-        serverDate
+        serverDate,
+        utils
     } = usePage().props;
 
     console.log(quotation);
@@ -457,13 +458,13 @@ export default function Create() {
                                         htmlFor="customer_name"
                                         className="font-bold block mb-2"
                                     >
-                                        Logotipo
+                                        Logo
                                     </label>
                                     <div className="border-2 border-dashed surface-border border-round surface-ground flex flex-column justify-content-center align-items-center font-medium">
                                         <div className="p-2">
                                             <img
                                                 className="logo"
-                                                src="https://img.freepik.com/vector-premium/diseno-logotipo-triangulo-minimo-colores-degradados_720439-7.jpg"
+                                                src={utils.storageUpload + "/" + companyConfig.logo}
                                                 alt=""
                                             />
                                         </div>

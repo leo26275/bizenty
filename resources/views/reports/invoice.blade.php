@@ -175,7 +175,7 @@
                                 <img
                                     class="logo01"
                                     style="border: 3px solid #ffffff;"
-                                    src="{{ public_path('images/logo.jpg') }}"
+                                    src="{{ public_path('storage/uploads/'.$companyConfig->logo) }}"
                                     alt=""
                                 />
                                 <div>

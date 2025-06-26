@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CompanyController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -45,13 +46,14 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::patch('/quotation/delete/{quotation_id}', [QuotationController::class, 'delete'])->name('quotation.delete');
     Route::post('/quotation', [QuotationController::class, 'storeOrUpdate'])->name('quotation.mergue');
     Route::get('/reports/quotation/{quotation_id}/download', [ReportController::class, 'downloadQuote'])->name('reports.quotation.download');
+    Route::post('/quotation/email/{quotation_id}', [ReportController::class, 'sendQuotation']);
 
 
     Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoice.create');
     Route::post('/invoice', [InvoiceController::class, 'storeOrUpdate'])->name('invoice.mergue');
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoice.index');
     Route::get('/reports/invoice/{invoice_id}/download', [ReportController::class, 'downloadInvoice'])->name('reports.invoice.download');
-
+    Route::post('/invoice/email/{invoice_id}', [ReportController::class, 'sendInvoice']);
 
 
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
@@ -66,7 +68,14 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/api/customers/all', [CustomerController::class, 'all'])->name('customers.wsindex');
+
+    /*Company*/
+    Route::get('/company/setting', [CompanyController::class, 'setting'])->name('company.setting');
+    Route::post('/company/setting', [CompanyController::class, 'updateSetting'])->name('company.update');
+
 });
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

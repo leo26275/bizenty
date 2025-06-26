@@ -175,7 +175,7 @@
                                 <img
                                     class="logo01"
                                     style="border: 3px solid #ffffff;"
-                                    src="{{ public_path('images/logo.jpg') }}"
+                                    src="{{ public_path('storage/uploads/'.$companyConfig->logo) }}"
                                     alt=""
                                 />
                                 <div>
@@ -212,11 +212,11 @@
                     @foreach ($quotationDtl as $i => $quote)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td>{{ quote['category']['name'] }}</td>
+                        <td>{{ $quote['category']['name'] }}</td>
                         <td>{{ $quote['description'] }}</td>
                         <td>{{ $quote['unit_price'] }}</td>
                         <td>{{ $quote['quantity'] }}</td>
-                        <td>{{ $qquoteuot['total_amount'] }}</td>
+                        <td>{{ $quote['total_amount'] }}</td>
                     </tr>
                     @endforeach
                 </tbody>

@@ -74,6 +74,8 @@ class QuotationController extends Controller
             $companyConfig = Company::find(Auth::user()->company_id);
         }
 
+        $utils = new \stdClass();
+        $utils->storageUpload = asset('storage/uploads');
 
         return Inertia::render('Quotation/Create', [
             'categories' => $categories,
@@ -82,7 +84,8 @@ class QuotationController extends Controller
             'quotationDtls' => $quotationDtls,
             'quotation_id' => $quotation_id,
             'edit' => $editMode,
-            'serverDate' => Carbon::now()
+            'serverDate' => Carbon::now(),
+            'utils' => $utils
         ]);
     }
 
@@ -138,7 +141,7 @@ class QuotationController extends Controller
             $tracking .= 'Cotizacion id ' . $cotizacion->id;
 
             if(is_null($cotizacion)){
-                throw new Exception("Ocurrio un error en el manejo del encabezado para la cotización");
+                throw new \Exception("Ocurrio un error en el manejo del encabezado para la cotización");
             }
 
 
@@ -221,7 +224,7 @@ class QuotationController extends Controller
 
         }catch(\Exception $ex){
             DB::rollBack();
-            Log::error('Error al duplicar factura: ' . $e->getMessage());
+            Log::error('Error al duplicar factura: ' . $ex->getMessage());
             return response()->json(['message' => 'Error al duplicar la factura.'], 500);
         }
 
@@ -239,7 +242,6 @@ class QuotationController extends Controller
 
          try{
             DB::beginTransaction();
-            Log::info('ingreso en el metodo 01');
             $invoice = Invoice::create([
                 'customer_id' => $quotation->customer_id,
                 'subtotal' => $quotation->subtotal,
